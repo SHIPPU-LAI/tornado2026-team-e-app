@@ -1,0 +1,19 @@
+{
+  "name": "teame-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "setup": "npm run schema:local && npm run migrate && npm run seed:apply",
+    "schema:local": "wrangler d1 execute teame --local --file=dev-schema/cards.sql",
+    "migrate": "wrangler d1 migrations apply teame --local",
+    "seed": "node scripts/gen-seed.js",
+    "seed:apply": "wrangler d1 execute teame --local --file=seeds/local_seed.sql"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

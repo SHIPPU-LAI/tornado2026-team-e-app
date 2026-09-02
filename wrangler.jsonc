@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // 【未決】Worker 名は仮。チームで決まったら差し替える。
+  "name": "teame-app",
+
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // D1（SQLite）
+  //
+  // 【重要】同じ database_id を、2つのバインディング名で公開している。
+  // 紹介機能は teame_taka_introduce、検索機能は DB という名前で参照しており、
+  // 名前が食い違っていた。同じDBを2つの名前で見せることで、
+  // どちらのコードも1行も書き換えずに動く。
+  //
+  // 恒久的には DB に寄せたいが、それは紹介機能側の一括置換が要るので後回し。
+  //
+  // ローカル開発だけなら database_id はこのままで動く。
+  // リモートに作るときは `npx wrangler d1 create teame` で出た id を
+  // 【両方の行に】差し替える。片方だけ変えるとDBが分裂して、
+  // エラーを出さずに検索結果が常に0件になる。
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "teame",
+      "database_id": "local-dev-placeholder"
+    },
+    {
+      "binding": "teame_taka_introduce",
+      "database_name": "teame",
+      "database_id": "local-dev-placeholder"
+    }
+  ],
+
+  // Workers AI（検索機能の段3・ベクトル類似で使う埋め込み生成）
+  //
+  // 【注意】AI バインディングはローカルで動かず、必ずリモートに接続する。
+  //         `npx wrangler login` を済ませていないと dev サーバーが起動しない。
+  //         段1〜2 だけ試したい場合は次の1行をコメントアウトすれば認証なしで起動できる。
+  "ai": { "binding": "AI" }
+}

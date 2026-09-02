@@ -1,0 +1,10 @@
+# このファイルを .dev.vars という名前でコピーして、各自のキーを入れる。
+# .dev.vars は .gitignore 済み。絶対にコミットしないこと。
+#
+# 地図は OpenStreetMap を使うため、APIキーも課金設定も不要です。
+
+# 検索機能：POST /api/search/reindex を守るトークン。
+# ローカルでは未設定で構いません（未設定なら認証なしで通ります）。
+# 【デプロイするときは必ず設定すること】
+#   npx wrangler secret put REINDEX_TOKEN
+# REINDEX_TOKEN=
