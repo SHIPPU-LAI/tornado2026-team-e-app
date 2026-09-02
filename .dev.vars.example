@@ -8,3 +8,4 @@
 # 【デプロイするときは必ず設定すること】
 #   npx wrangler secret put REINDEX_TOKEN
 # REINDEX_TOKEN=
+
