@@ -136,6 +136,105 @@ export async function setCardGeo(db, cardId, lat, lng, source, updatedAt) {
     .run();
 }
 
+// --- ユーザー側（カード閲覧・いいね） -----------------------------
+
+// artisan_name が「（架空）」で始まるカードは発表用のダミーデータ。
+// features/search/db.js の shape() と同じ判定（実在の工房と誤解させないため）。
+export function isDummyCard(card) {
+  return String(card.artisan_name || "").startsWith("（架空）");
+}
+
+export async function getCardPublic(db, id) {
+  const row = await db
+    .prepare(`select ${CARD_COLS} from cards where id = ?`)
+    .bind(id)
+    .first();
+  return shapeCard(row);
+}
+
+// 品単位のカードをランダムに1件返す（伝統名でグループ化しない。設計書3-2）。
+// swipes を持たないので既読管理はしない。同じカードが連続で出ることがある
+// （既知の割り切り。除外ロジックは足さない）。
+export async function getRandomCard(db) {
+  const row = await db
+    .prepare(`select ${CARD_COLS} from cards order by random() limit 1`)
+    .first();
+  return shapeCard(row);
+}
+
+export async function countLikes(db, cardId) {
+  const row = await db
+    .prepare("select count(*) as n from likes where card_id = ?")
+    .bind(cardId)
+    .first();
+  return row.n;
+}
+
+export async function isLikedByUser(db, cardId, userId) {
+  if (!userId) return false;
+  const row = await db
+    .prepare("select id from likes where user_id = ? and card_id = ?")
+    .bind(userId, cardId)
+    .first();
+  return Boolean(row);
+}
+
+// トグル。既に居れば消す、無ければ増やす。likes.unique(user_id, card_id) が
+// 最後の砦（同じユーザーの同じカードへの二重いいねを防ぐ）。
+export async function toggleLike(db, cardId, userId) {
+  const existing = await db
+    .prepare("select id from likes where user_id = ? and card_id = ?")
+    .bind(userId, cardId)
+    .first();
+
+  if (existing) {
+    await db.prepare("delete from likes where id = ?").bind(existing.id).run();
+  } else {
+    await db
+      .prepare("insert into likes (user_id, card_id, created_at) values (?, ?, ?)")
+      .bind(userId, cardId, Date.now())
+      .run();
+  }
+
+  const like_count = await countLikes(db, cardId);
+  return { liked: !existing, like_count };
+}
+
+export async function listLikedCards(db, userId) {
+  const { results } = await db
+    .prepare(
+      `select ${CARD_COLS.split(",").map((c) => `c.${c.trim()}`).join(", ")}
+       from likes l join cards c on c.id = l.card_id
+       where l.user_id = ?
+       order by l.created_at desc`,
+    )
+    .bind(userId)
+    .all();
+  return results.map(shapeCard);
+}
+
+export async function getCardGeoRow(db, cardId) {
+  return db
+    .prepare("select lat, lng from card_geo where card_id = ?")
+    .bind(cardId)
+    .first();
+}
+
+export async function listCardImages(db, cardId) {
+  const { results } = await db
+    .prepare("select image_key from card_images where card_id = ? order by sort_order")
+    .bind(cardId)
+    .all();
+  return results.map((r) => r.image_key);
+}
+
+export async function getCardI18n(db, cardId, lang) {
+  return db
+    .prepare("select name, description from card_i18n where card_id = ? and lang = ?")
+    .bind(cardId, lang)
+    .first();
+}
+
 export async function upsertCardI18nEn(db, cardId, name, description, updatedAt) {
   await db
     .prepare(

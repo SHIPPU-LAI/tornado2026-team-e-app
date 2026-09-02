@@ -10,12 +10,17 @@
 //   PUT    /api/introduce/artisan/:id       修正
 //   DELETE /api/introduce/artisan/:id       削除
 //   GET    /api/introduce/artisan/:id       1件取得（修正フォーム用）
+//   GET    /api/introduce/user/liked        いいね一覧              ← requireAuth
+//   GET    /api/introduce/user/next         カードを1枚             未ログインOK
+//   POST   /api/introduce/user/:id/like     いいねトグル            ← requireAuth
+//   GET    /api/introduce/user/:id          記事詳細                未ログインOK
 //
-// 【重要】静的パス（/compose, /mine, /postal, /geocode, /reverse）は
+// 【重要】静的パス（/compose, /mine, /postal, /geocode, /reverse, /liked, /next）は
 // :id より先に登録する。後から足す /name-kana /name-suggestions も
 // 必ず :id より前に置くこと（AGENTS.md 3, 設計書2-3）。
 //
-// 未実装の /api/introduce/user/* は 501 を返す。
+// 閲覧（next, :id）は未ログインでも通す。訪日客が偶然開いて見られることが
+// 前提のアプリのため（設計書4-3）。いいね関連だけ requireAuth を掛ける。
 
 import { Hono } from "hono";
 
@@ -33,6 +38,16 @@ import {
   deleteCardRelated,
   upsertCardI18nEn,
   setCardGeo,
+  isDummyCard,
+  getCardPublic,
+  getRandomCard,
+  countLikes,
+  isLikedByUser,
+  toggleLike,
+  listLikedCards,
+  getCardGeoRow,
+  listCardImages,
+  getCardI18n,
 } from "./db.js";
 
 const app = new Hono();
@@ -248,6 +263,102 @@ app.get("/api/introduce/artisan/:id", async (c) => {
     return fail(c, "NOT_FOUND", "カードが見つかりません", 404);
   }
   return c.json({ card });
+});
+
+// --- ユーザー側（カード閲覧・いいね、設計書4-3・8章） -------------
+// 【重要】/api/introduce/user/* にまとめて requireAuth を掛けない。
+// 閲覧（/next, /:id）は未ログインで通す。いいね関連だけ要ログイン。
+
+async function requireLoginUser(c, next) {
+  const token = readSessionCookie(c);
+  const user = await userBySessionToken(db(c), token);
+  if (!user) return fail(c, "UNAUTHORIZED", "ログインが必要です", 401);
+  c.set("user", user);
+  await next();
+}
+
+async function optionalUser(c) {
+  const token = readSessionCookie(c);
+  if (!token) return null;
+  return userBySessionToken(db(c), token);
+}
+
+// next/:id/liked で共通の表示形を作る。tags は配列化済み、like_count・liked・
+// lat/lng・images・is_dummy を必ず含める。lang=en なら card_i18n で差し替える
+// （その場で翻訳はしない。設計書5章）。
+async function buildCardView(dbc, card, userId, lang) {
+  const [like_count, liked, geo, images] = await Promise.all([
+    countLikes(dbc, card.id),
+    isLikedByUser(dbc, card.id, userId),
+    getCardGeoRow(dbc, card.id),
+    listCardImages(dbc, card.id),
+  ]);
+
+  let name = card.name;
+  let description = card.description;
+  if (lang === "en") {
+    const i18n = await getCardI18n(dbc, card.id, "en");
+    if (i18n?.name) name = i18n.name;
+    if (i18n?.description) description = i18n.description;
+  }
+
+  return {
+    ...card,
+    name,
+    description,
+    like_count,
+    liked,
+    lat: geo ? geo.lat : null,
+    lng: geo ? geo.lng : null,
+    images,
+    is_dummy: isDummyCard(card),
+  };
+}
+
+app.use("/api/introduce/user/liked", requireLoginUser);
+app.use("/api/introduce/user/:id/like", requireLoginUser);
+
+app.get("/api/introduce/user/liked", async (c) => {
+  const lang = c.req.query("lang") || "ja";
+  const userId = c.get("user").id;
+  const items = await listLikedCards(db(c), userId);
+  const views = await Promise.all(
+    items.map((card) => buildCardView(db(c), card, userId, lang)),
+  );
+  return c.json({ items: views, total: views.length });
+});
+
+// 品単位のカードをランダムに1枚返す（伝統名でグループ化しない。設計書3-2）。
+// 既読管理は持たないので同じカードが連続で出ることがある（既知の割り切り）。
+// カードが0件のときは 404 ではなく card:null を返す（フロントが「もう無い」を表示できるように）。
+app.get("/api/introduce/user/next", async (c) => {
+  const lang = c.req.query("lang") || "ja";
+  const user = await optionalUser(c);
+  const card = await getRandomCard(db(c));
+  if (!card) return c.json({ card: null });
+  const view = await buildCardView(db(c), card, user ? user.id : null, lang);
+  return c.json({ card: view });
+});
+
+app.post("/api/introduce/user/:id/like", async (c) => {
+  const id = c.req.param("id");
+  const card = await getCardPublic(db(c), id);
+  if (!card) return fail(c, "NOT_FOUND", "カードが見つかりません", 404);
+
+  const result = await toggleLike(db(c), id, c.get("user").id);
+  return c.json(result);
+});
+
+app.get("/api/introduce/user/:id", async (c) => {
+  const id = c.req.param("id");
+  const lang = c.req.query("lang") || "ja";
+  const user = await optionalUser(c);
+
+  const card = await getCardPublic(db(c), id);
+  if (!card) return fail(c, "NOT_FOUND", "カードが見つかりません", 404);
+
+  const view = await buildCardView(db(c), card, user ? user.id : null, lang);
+  return c.json({ card: view });
 });
 
 // ここより下は未実装のスタブ。実装計画書のステップに沿って上から実装していく。
