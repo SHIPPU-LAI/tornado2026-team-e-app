@@ -122,6 +122,20 @@ export async function deleteCardRelated(db, cardId) {
   ]);
 }
 
+// 住所検索で得た緯度経度を保存する（設計書7章）。無ければ呼ばなくてよい。
+// 検索機能は無い場合、都道府県の代表座標（features/search/regions.js）で代替する。
+export async function setCardGeo(db, cardId, lat, lng, source, updatedAt) {
+  await db
+    .prepare(
+      `insert into card_geo (card_id, lat, lng, source, updated_at)
+       values (?, ?, ?, ?, ?)
+       on conflict(card_id) do update set
+         lat = excluded.lat, lng = excluded.lng, source = excluded.source, updated_at = excluded.updated_at`,
+    )
+    .bind(cardId, lat, lng, source ?? null, updatedAt)
+    .run();
+}
+
 export async function upsertCardI18nEn(db, cardId, name, description, updatedAt) {
   await db
     .prepare(

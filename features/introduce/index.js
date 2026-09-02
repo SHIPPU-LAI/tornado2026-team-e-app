@@ -3,13 +3,16 @@
 // この feature が持つパス（実装済み分のみ。残りは実装計画書のステップ順で足す）:
 //   POST   /api/introduce/artisan/compose   カード作成の中核（設計書3章）
 //   GET    /api/introduce/artisan/mine      自分のカード一覧
+//   GET    /api/introduce/artisan/postal    郵便番号→住所（zipcloud中継、設計書7章）
+//   GET    /api/introduce/artisan/geocode   屋号・住所→候補＋緯度経度（Nominatim中継）
+//   GET    /api/introduce/artisan/reverse   緯度経度→住所（Nominatim逆引き）
 //   POST   /api/introduce/artisan           新規登録
 //   PUT    /api/introduce/artisan/:id       修正
 //   DELETE /api/introduce/artisan/:id       削除
 //   GET    /api/introduce/artisan/:id       1件取得（修正フォーム用）
 //
-// 【重要】静的パス（/compose, /mine）は :id より先に登録する。
-// 後から足す /name-kana /name-suggestions /postal /geocode /reverse も
+// 【重要】静的パス（/compose, /mine, /postal, /geocode, /reverse）は
+// :id より先に登録する。後から足す /name-kana /name-suggestions も
 // 必ず :id より前に置くこと（AGENTS.md 3, 設計書2-3）。
 //
 // 未実装の /api/introduce/user/* は 501 を返す。
@@ -19,6 +22,7 @@ import { Hono } from "hono";
 import { readSessionCookie, userBySessionToken } from "../auth/session.js";
 import { QUESTIONS } from "./prompt.js";
 import { composeCard } from "./compose.js";
+import { fetchPostal, fetchGeocode, fetchReverse } from "./address.js";
 import {
   normalizeTags,
   insertCard,
@@ -28,6 +32,7 @@ import {
   deleteCardForArtisan,
   deleteCardRelated,
   upsertCardI18nEn,
+  setCardGeo,
 } from "./db.js";
 
 const app = new Hono();
@@ -85,6 +90,62 @@ app.get("/api/introduce/artisan/mine", async (c) => {
   return c.json({ items, total: items.length });
 });
 
+// --- 住所検索の中継（設計書7章） ---------------------------------
+// 外部APIが落ちても登録自体は続けられる。ここで握りつぶさず、
+// 呼び出し側（フロント）に失敗をそのまま返す。
+
+app.get("/api/introduce/artisan/postal", async (c) => {
+  const code = (c.req.query("code") || "").replace(/-/g, "");
+  if (!/^\d{7}$/.test(code)) {
+    return fail(c, "VALIDATION_ERROR", "code は7桁の数字で指定してください", 400);
+  }
+  try {
+    const data = await fetchPostal(code);
+    return c.json(data);
+  } catch (e) {
+    console.error("[introduce] postal: 外部APIの呼び出しに失敗", e);
+    return fail(c, "UPSTREAM_ERROR", "住所の取得に失敗しました", 502);
+  }
+});
+
+app.get("/api/introduce/artisan/geocode", async (c) => {
+  const q = (c.req.query("q") || "").trim();
+  if (!q) return fail(c, "VALIDATION_ERROR", "q は必須です", 400);
+  try {
+    const items = await fetchGeocode(q);
+    return c.json({ items });
+  } catch (e) {
+    console.error("[introduce] geocode: 外部APIの呼び出しに失敗", e);
+    return fail(c, "UPSTREAM_ERROR", "住所の検索に失敗しました", 502);
+  }
+});
+
+app.get("/api/introduce/artisan/reverse", async (c) => {
+  const lat = c.req.query("lat");
+  const lng = c.req.query("lng");
+  if (!lat || !lng) {
+    return fail(c, "VALIDATION_ERROR", "lat, lng は必須です", 400);
+  }
+  try {
+    // Nominatim側のパラメータ名は lon（lng ではない）。ここで変換する。
+    const data = await fetchReverse(lat, lng);
+    return c.json(data);
+  } catch (e) {
+    console.error("[introduce] reverse: 外部APIの呼び出しに失敗", e);
+    return fail(c, "UPSTREAM_ERROR", "住所の取得に失敗しました", 502);
+  }
+});
+
+// lat/lng が両方とも数値で渡されたときだけ card_geo に保存する。
+// 無くてもカードは作れる（検索機能が都道府県の代表座標で代替する）。
+async function saveGeoIfPresent(c, cardId, body, updatedAt) {
+  const lat = Number(body.lat);
+  const lng = Number(body.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  const source = body.geo_source ? String(body.geo_source) : null;
+  await setCardGeo(db(c), cardId, lat, lng, source, updatedAt);
+}
+
 app.post("/api/introduce/artisan", async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const name = String(body.name || "").trim();
@@ -122,9 +183,13 @@ app.post("/api/introduce/artisan", async (c) => {
     await upsertCardI18nEn(db(c), id, body.name_en ?? null, String(body.description_en), now);
   }
 
+  await saveGeoIfPresent(c, id, body, now);
+
   // image_keys はステップ5で card_images に紐付ける。今は受け取るだけで何もしない。
 
-  return c.json({ ok: true, id });
+  // フロントが送った配列との差（6個目が切られた等）に気づけるよう、
+  // 保存後の tags をそのまま返す。
+  return c.json({ ok: true, id, tags: card.tags ? card.tags.split(",").filter(Boolean) : [] });
 });
 
 app.put("/api/introduce/artisan/:id", async (c) => {
@@ -152,6 +217,8 @@ app.put("/api/introduce/artisan/:id", async (c) => {
   if (Object.prototype.hasOwnProperty.call(body, "description_en")) {
     await upsertCardI18nEn(db(c), id, body.name_en ?? null, body.description_en, now);
   }
+
+  await saveGeoIfPresent(c, id, body, now);
 
   const card = await getCardForArtisan(db(c), id, artisanId);
   return c.json({ ok: true, card });
