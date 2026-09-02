@@ -30,6 +30,8 @@ import { readSessionCookie, userBySessionToken } from "../auth/session.js";
 import { QUESTIONS } from "./prompt.js";
 import { composeCard } from "./compose.js";
 import { fetchPostal, fetchGeocode, fetchReverse } from "./address.js";
+import { embed, cardToText, EMBED_MODEL } from "../search/embed.js";
+import { saveEmbedding } from "../search/db.js";
 import {
   normalizeTags,
   insertCard,
@@ -157,6 +159,20 @@ app.get("/api/introduce/artisan/reverse", async (c) => {
   }
 });
 
+// カード1件だけ埋め込みを作り直す（設計書8章）。全件reindexは呼ばない。
+// card_embedding は検索機能の所有物なので、直接SQLは書かず公開関数を呼ぶ。
+// 失敗してもカードの保存自体は成功させる（段1・段2では検索できるため）。
+async function reindexCard(c, cardId) {
+  try {
+    const card = await getCardPublic(db(c), cardId);
+    if (!card) return;
+    const [vector] = await embed(c.env.AI, [cardToText(card)]);
+    await saveEmbedding(c.env.DB, cardId, vector, EMBED_MODEL);
+  } catch (e) {
+    console.error("[introduce] 埋め込み生成に失敗", e);
+  }
+}
+
 // lat/lng が両方とも数値で渡されたときだけ card_geo に保存する。
 // 無くてもカードは作れる（検索機能が都道府県の代表座標で代替する）。
 async function saveGeoIfPresent(c, cardId, body, updatedAt) {
@@ -240,6 +256,8 @@ app.post("/api/introduce/artisan", async (c) => {
     await insertCardImages(db(c), id, imageKeys);
   }
 
+  await reindexCard(c, id);
+
   // フロントが送った配列との差（6個目が切られた等）に気づけるよう、
   // 保存後の tags をそのまま返す。
   return c.json({ ok: true, id, tags: card.tags ? card.tags.split(",").filter(Boolean) : [] });
@@ -272,6 +290,8 @@ app.put("/api/introduce/artisan/:id", async (c) => {
   }
 
   await saveGeoIfPresent(c, id, body, now);
+
+  await reindexCard(c, id);
 
   const card = await getCardForArtisan(db(c), id, artisanId);
   return c.json({ ok: true, card });
