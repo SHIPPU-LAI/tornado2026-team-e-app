@@ -1,11 +1,21 @@
-// 5問の答え（+ 掘り下げ）から、日本語3文＋英訳3文を組み立てる（設計書3章）。
+// 5問の答え（+ 掘り下げ）から、日本語3文＋英訳3文を組み立てる（設計書3章、3-4改）。
+//
+// 判定は2段に分かれる（設計書3-4改）：
+//   空欄            → コード側。元の質問をそのまま出し直す（キー無しでも動く）
+//   薄いかどうか+文言 → Gemini側。分野の観点はプロンプトのヒントとしてのみ渡し、
+//                      本文には一切書かせない
 //
 // Gemini が落ちても、または GEMINI_API_KEY が無くても、カードは作れる。
 // その場合は答えをそのまま連結して description に入れ、ai:false を返す（設計書3-4）。
 
 import { QUESTIONS, buildComposePrompt } from "./prompt.js";
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+// 【要確認】設計書3-4は Gemini 2.5 Flash だが、実行時に404
+// (「models/gemini-2.5-flash is no longer available to new users」)。
+// ListModels には残っているが、このキーの generateContent では拒否される。
+// バージョン固定だと同じ理由でまた止まるため、常に最新のflashを指す
+// エイリアス gemini-flash-latest に暫定変更している。計画役の確認待ち。
+const GEMINI_MODEL = "gemini-flash-lite-latest";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 function isEmpty(answer) {
@@ -31,32 +41,46 @@ function firstEmptyIndex(merged) {
   return -1;
 }
 
-function fallbackFollowupQuestion(index) {
-  return `${QUESTIONS[index]}（もう少しだけ詳しく教えてください）`;
-}
-
 function fallbackDescription(merged) {
   const joined = merged.filter((a) => !isEmpty(a)).join("。");
   return joined ? `${joined}。` : "";
 }
 
+// Gemini は数秒〜十秒程度かかることがあるため、外部中継（address.js）より長めに取る。
+// それでも上限を付けないと、応答が返らないまま職人を待たせ続けることになる。
+const GEMINI_TIMEOUT_MS = 15000;
+
 async function callGemini(apiKey, prompt) {
-  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" },
-    }),
-  });
-  if (!res.ok) throw new Error(`Gemini API が ${res.status} を返しました`);
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), GEMINI_TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" },
+      }),
+      signal: ctl.signal,
+    });
+  } finally {
+    clearTimeout(t);
+  }
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    throw new Error(`Gemini API が ${res.status} を返しました: ${bodyText.slice(0, 300)}`);
+  }
 
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("Geminiの応答にテキストがありません");
 
   const parsed = JSON.parse(text);
-  if (!Array.isArray(parsed.ja) || !Array.isArray(parsed.en)) {
+  const hasSentences = Array.isArray(parsed.ja) && Array.isArray(parsed.en);
+  const hasFollowup =
+    parsed.followup && typeof parsed.followup.index === "number" && parsed.followup.question;
+  if (!hasSentences && !hasFollowup) {
     throw new Error("Geminiの応答形式が想定外です");
   }
   return parsed;
@@ -68,30 +92,42 @@ async function callGemini(apiKey, prompt) {
  */
 export async function composeCard(env, { name, answers, followups }) {
   const merged = mergeAnswers(answers, followups);
+  const hasFollowupRound = Array.isArray(followups) && followups.length > 0;
 
-  // 掘り下げは1周だけ。followups が空のリクエストでだけ空欄チェックする。
-  // followups 付きの再送には必ず3文（またはフォールバック文）を返す（設計書3-4）。
-  if (!followups || followups.length === 0) {
+  // 空欄はコード側で先に弾く。元の質問をそのまま出し直すだけなので、
+  // GEMINI_API_KEY が無くても動く。掘り下げは1周だけなので、
+  // followups 付きの再送ではこのチェックをしない（設計書3-4）。
+  if (!hasFollowupRound) {
     const emptyIndex = firstEmptyIndex(merged);
     if (emptyIndex !== -1) {
       return {
         ja: null,
         en: null,
-        ai: true,
-        followup: { index: emptyIndex, question: fallbackFollowupQuestion(emptyIndex) },
+        ai: false,
+        followup: { index: emptyIndex, question: QUESTIONS[emptyIndex] },
       };
     }
   }
 
   const apiKey = env.GEMINI_API_KEY;
   if (!apiKey) {
+    // 「薄いかどうか」の判定はGemini側の役割。キーが無ければ判定できないので、
+    // そのまま連結してカードを作れることを優先する（設計書3-4：AIが落ちてもカードは作れる）。
     return { ja: [fallbackDescription(merged)], en: [], ai: false, followup: null };
   }
 
   try {
-    const prompt = buildComposePrompt(name, merged);
-    const { ja, en } = await callGemini(apiKey, prompt);
-    return { ja: ja.slice(0, 3), en: en.slice(0, 3), ai: true, followup: null };
+    const allowFollowup = !hasFollowupRound;
+    const prompt = buildComposePrompt(name, merged, { allowFollowup });
+    const result = await callGemini(apiKey, prompt);
+
+    if (allowFollowup && result.followup) {
+      return { ja: null, en: null, ai: true, followup: result.followup };
+    }
+    if (!Array.isArray(result.ja) || !Array.isArray(result.en)) {
+      throw new Error("Geminiが文章を返しませんでした（followupの1周を使い切った状態）");
+    }
+    return { ja: result.ja.slice(0, 3), en: result.en.slice(0, 3), ai: true, followup: null };
   } catch (e) {
     console.error("[introduce] compose: Gemini呼び出しに失敗", e);
     return { ja: [fallbackDescription(merged)], en: [], ai: false, followup: null };
