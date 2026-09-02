@@ -11,6 +11,7 @@
 import { Hono } from "hono";
 
 import { hashPassword, verifyPassword, DUMMY_SALT, DUMMY_HASH } from "./crypto.js";
+import { validatePassword } from "./password.js";
 import {
   createSession,
   deleteSession,
@@ -62,6 +63,11 @@ app.post("/api/auth/signup", async (c) => {
       "email, password, role(artisan|user) は必須です",
       400,
     );
+  }
+
+  const passwordCheck = validatePassword(password, email);
+  if (!passwordCheck.ok) {
+    return fail(c, "VALIDATION_ERROR", passwordCheck.reason, 400);
   }
 
   const existing = await db(c)
