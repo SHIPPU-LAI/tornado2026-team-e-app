@@ -40,5 +40,16 @@
   // 【注意】AI バインディングはローカルで動かず、必ずリモートに接続する。
   //         `npx wrangler login` を済ませていないと dev サーバーが起動しない。
   //         段1〜2 だけ試したい場合は次の1行をコメントアウトすれば認証なしで起動できる。
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
+
+  // 紹介機能の画像保存用 KV（設計書 6章）。base64 で実体を持つ。
+  //
+  // id はローカル開発用の仮値。リモートに作るときは
+  // `npx wrangler kv namespace create teame_images` で出た id に差し替える。
+  "kv_namespaces": [
+    {
+      "binding": "teame_images",
+      "id": "local-dev-placeholder"
+    }
+  ]
 }
