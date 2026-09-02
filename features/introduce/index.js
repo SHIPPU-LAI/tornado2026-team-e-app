@@ -10,6 +10,8 @@
 //   PUT    /api/introduce/artisan/:id       修正
 //   DELETE /api/introduce/artisan/:id       削除
 //   GET    /api/introduce/artisan/:id       1件取得（修正フォーム用）
+//   POST   /api/introduce/artisan/upload-image  画像を1枚アップロード（設計書6章）
+//   GET    /api/introduce/image/:key        画像を返す              未ログインOK
 //   GET    /api/introduce/user/liked        いいね一覧              ← requireAuth
 //   GET    /api/introduce/user/next         カードを1枚             未ログインOK
 //   POST   /api/introduce/user/:id/like     いいねトグル            ← requireAuth
@@ -47,8 +49,12 @@ import {
   listLikedCards,
   getCardGeoRow,
   listCardImages,
+  insertCardImages,
   getCardI18n,
+  MAX_IMAGES,
 } from "./db.js";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const app = new Hono();
 
@@ -161,6 +167,31 @@ async function saveGeoIfPresent(c, cardId, body, updatedAt) {
   await setCardGeo(db(c), cardId, lat, lng, source, updatedAt);
 }
 
+// --- 画像（設計書6章） --------------------------------------------
+// KV に生バイトで保存する。base64 は経由しない。
+// content_type を metadata に入れないと、取り出すときに何の画像か分からない。
+
+app.post("/api/introduce/artisan/upload-image", async (c) => {
+  const body = await c.req.parseBody().catch(() => ({}));
+  const file = body.file;
+
+  if (!(file instanceof File)) {
+    return fail(c, "VALIDATION_ERROR", "file は必須です", 400);
+  }
+  if (!file.type || !file.type.startsWith("image/")) {
+    return fail(c, "VALIDATION_ERROR", "画像ファイルのみアップロードできます", 400);
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return fail(c, "VALIDATION_ERROR", "5MBを超える画像はアップロードできません", 400);
+  }
+
+  const key = `card-image:${crypto.randomUUID()}`;
+  const buf = await file.arrayBuffer();
+  await c.env.teame_images.put(key, buf, { metadata: { content_type: file.type } });
+
+  return c.json({ key });
+});
+
 app.post("/api/introduce/artisan", async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const name = String(body.name || "").trim();
@@ -168,6 +199,11 @@ app.post("/api/introduce/artisan", async (c) => {
 
   if (!name || !description) {
     return fail(c, "VALIDATION_ERROR", "name, description は必須です", 400);
+  }
+
+  const imageKeys = Array.isArray(body.image_keys) ? body.image_keys.map(String) : [];
+  if (imageKeys.length > MAX_IMAGES) {
+    return fail(c, "VALIDATION_ERROR", `画像は最大${MAX_IMAGES}枚までです`, 400);
   }
 
   const artisanId = c.get("user").id;
@@ -200,7 +236,9 @@ app.post("/api/introduce/artisan", async (c) => {
 
   await saveGeoIfPresent(c, id, body, now);
 
-  // image_keys はステップ5で card_images に紐付ける。今は受け取るだけで何もしない。
+  if (imageKeys.length > 0) {
+    await insertCardImages(db(c), id, imageKeys);
+  }
 
   // フロントが送った配列との差（6個目が切られた等）に気づけるよう、
   // 保存後の tags をそのまま返す。
@@ -248,8 +286,14 @@ app.delete("/api/introduce/artisan/:id", async (c) => {
     return fail(c, "NOT_FOUND", "カードが見つかりません", 404);
   }
 
+  // card_images の行を消す前に、KV上の実体を消すための鍵を読んでおく
+  // （ステップ4では card_images の行だけ消していて、KVには残っていた）。
+  const imageKeys = await listCardImages(db(c), id);
+
   // card_embedding は検索機能の所有物なので触らない（設計書8章。ステップ8でまとめて扱う）。
   await deleteCardRelated(db(c), id);
+
+  await Promise.all(imageKeys.map((key) => c.env.teame_images.delete(key)));
 
   return c.json({ ok: true });
 });
@@ -263,6 +307,19 @@ app.get("/api/introduce/artisan/:id", async (c) => {
     return fail(c, "NOT_FOUND", "カードが見つかりません", 404);
   }
   return c.json({ card });
+});
+
+// 【重要】/api/introduce/artisan/* の外にある。カード閲覧で誰でも見るため
+// 認証を掛けない（設計書6章）。キーは uuid なので推測できない。
+app.get("/api/introduce/image/:key", async (c) => {
+  const key = c.req.param("key");
+  const { value, metadata } = await c.env.teame_images.getWithMetadata(key, "stream");
+  if (!value) {
+    return fail(c, "NOT_FOUND", "画像が見つかりません", 404);
+  }
+  return new Response(value, {
+    headers: { "content-type": metadata?.content_type || "application/octet-stream" },
+  });
 });
 
 // --- ユーザー側（カード閲覧・いいね、設計書4-3・8章） -------------

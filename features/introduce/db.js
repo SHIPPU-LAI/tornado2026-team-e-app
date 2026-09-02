@@ -4,6 +4,7 @@
 // features/search/embed.js, db.js の公開関数を import して使う）。
 
 export const MAX_TAGS = 5;
+export const MAX_IMAGES = 3;
 
 const CARD_COLS = `
   id, artisan_id, name, name_kana, artisan_name, description,
@@ -218,6 +219,20 @@ export async function getCardGeoRow(db, cardId) {
     .prepare("select lat, lng from card_geo where card_id = ?")
     .bind(cardId)
     .first();
+}
+
+// 登録時に image_keys を sort_order 付きで保存する（設計書6章）。
+// 上限3枚はここでは強制しない（呼び出し側で400にする。設計書の完了条件）。
+export async function insertCardImages(db, cardId, imageKeys) {
+  const now = Date.now();
+  for (let i = 0; i < imageKeys.length; i++) {
+    await db
+      .prepare(
+        "insert into card_images (card_id, image_key, sort_order, created_at) values (?, ?, ?, ?)",
+      )
+      .bind(cardId, imageKeys[i], i, now)
+      .run();
+  }
 }
 
 export async function listCardImages(db, cardId) {
