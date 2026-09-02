@@ -10,6 +10,13 @@ const PBKDF2_ITERATIONS = 10000;
 const HASH_BITS = 256;
 const SALT_BYTES = 16;
 
+// login でメールが存在しないときに使うダミー値（ステップ3.5）。
+// 実在のパスワードのハッシュではない。形式（16byte/32byte のhex）が合っていれば
+// 中身は何でもよい。存在しないメールでも同じだけPBKDF2を回すためだけに使う。
+export const DUMMY_SALT = "00112233445566778899aabbccddeeff";
+export const DUMMY_HASH =
+  "0011223344556677889900112233445566778899001122334455667788990011";
+
 function toHex(buf) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

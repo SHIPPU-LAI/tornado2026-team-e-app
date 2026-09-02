@@ -10,7 +10,7 @@
 
 import { Hono } from "hono";
 
-import { hashPassword, verifyPassword } from "./crypto.js";
+import { hashPassword, verifyPassword, DUMMY_SALT, DUMMY_HASH } from "./crypto.js";
 import {
   createSession,
   deleteSession,
@@ -76,13 +76,23 @@ app.post("/api/auth/signup", async (c) => {
   const id = crypto.randomUUID();
   const createdAt = Date.now();
 
-  await db(c)
-    .prepare(
-      `insert into users (id, email, password_hash, password_salt, role, display_name, created_at)
-       values (?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .bind(id, email, hash, salt, role, displayName, createdAt)
-    .run();
+  try {
+    await db(c)
+      .prepare(
+        `insert into users (id, email, password_hash, password_salt, role, display_name, created_at)
+         values (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(id, email, hash, salt, role, displayName, createdAt)
+      .run();
+  } catch (e) {
+    // 既存チェックの select とここまでの間には隙間がある。同時に2件signupが
+    // 飛ぶ（二重クリック等）と両方が select を通過するので、DBのunique制約が
+    // 最後の砦になる。ここを捕まえないと 500 INTERNAL_ERROR に落ちる。
+    if (String(e.message || e).includes("UNIQUE")) {
+      return fail(c, "VALIDATION_ERROR", "このメールアドレスは既に登録されています", 400);
+    }
+    throw e;
+  }
 
   const { token } = await createSession(db(c), id);
   setSessionCookie(c, token);
@@ -108,7 +118,12 @@ app.post("/api/auth/login", async (c) => {
     .bind(email)
     .first();
 
-  const ok = row && (await verifyPassword(password, row.password_salt, row.password_hash));
+  // 【重要】row が無くても必ずハッシュ計算を通す。短絡させると、存在しない
+  // メールだけ応答が速くなり、応答時間の差でメールアドレスを列挙できてしまう。
+  const salt = row ? row.password_salt : DUMMY_SALT;
+  const hash = row ? row.password_hash : DUMMY_HASH;
+  const matched = await verifyPassword(password, salt, hash);
+  const ok = Boolean(row) && matched;
   if (!ok) {
     return fail(c, "UNAUTHORIZED", "メールアドレスまたはパスワードが違います", 401);
   }
