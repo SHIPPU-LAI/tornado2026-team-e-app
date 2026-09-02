@@ -1,0 +1,20 @@
+# 改行コードをリポジトリ内で LF に統一する。
+#
+# これが無いと、Windows と Mac の人が同じファイルを触ったとき
+# 「1行だけ直したのに全行が差分になる」状態になり、レビューもマージもできなくなる。
+* text=auto eol=lf
+
+# 画像などは変換してはいけない（壊れる）。
+# public/assets/ に素材を置くときのため、先に指定しておく。
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.mp4   binary
