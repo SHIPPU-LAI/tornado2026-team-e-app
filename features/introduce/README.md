@@ -1,77 +1,132 @@
-# 紹介機能 ── 持ち込み待ち
+# 紹介機能
 
 **作業ディレクトリ：`features/introduce/`**
 
-いまは 501 を返すスタブです。**枠があることを示すためだけのもの**で、中身はありません。
+**旧README（このリポジトリに実装が無かった時点のもの）は実態と大きくずれていたため書き直した。**
+当時の前提「実装は別リポジトリにある」「501を返すスタブ」はもう成り立たない。
+実装計画書のステップ1〜8に沿って、このリポジトリの中に直接実装してある。
 
-実装は**別リポジトリ**にあります。
-このリポジトリからはコードを見ていません（仕様書とデプロイ先の画面のみ確認）。
+## いまの状態
 
-## 持ち込み方
-
-仕様書に「統合時は各 `features/*` フォルダを丸ごと持ち込み、
-`src/index.ts` に `app.route()` を1行追加するだけで組み込める設計にしている」とあるので、
-基本はそのまま入れられるはずです。
-
-1. `features/introduce/` の中身を、実装側の `features/introduce-artisan/` と
-   `features/introduce-user/` で置き換える
-2. `src/index.js` の `import introduce from "../features/introduce/index.js"` を実態に合わせる
-3. マイグレーションを `migrations/` に追加する（既存ファイルは書き換えない）
-
-## 仕様書から読み取れる範囲（未確認を含む）
-
-**この節は仕様書の記載を写したものです。実装と一致しているかは確認していません。**
-
-### 担っている機能
-
-**カード作成機能を含みます。**これがプロダクトの中核です。
+実装計画書のステップ1〜8まで完了。ステップ9（通し確認）は未着手。
 
 ```
-職人側   カードの作成・修正（伝統名・ふりがな・職人名・場所・説明文・タグ・画像）
-         説明文のAI3文チェック／言い換え提案
-         ふりがなの自動生成
-         伝統名のあいまい検索（予測変換）
-ユーザー側 マッチング（伝統名単位で1枚）／記事一覧／記事詳細／いいね／評価
+features/introduce/
+├ index.js      ルーティング
+├ db.js         D1 アクセス（cards の書き込み・card_geo/card_images/card_i18n）
+├ compose.js    5問 → Gemini → 3文＋英訳（掘り下げ判定込み）
+├ prompt.js     質問定義とGeminiプロンプト
+└ address.js    郵便番号・屋号検索・逆ジオコーディングの外部API中継
 ```
 
-### 持っているパス
+## 実装済みのパス
 
 ```
-GET  /user                      マッチング画面
-GET  /user/tradition/:name      記事一覧
-GET  /user/card/:id             記事詳細
-GET  /artisan                   職人向け登録・修正画面
-     /api/introduce/user/*      ユーザー側API
-     /api/introduce/artisan/*   職人側API
+POST   /api/introduce/artisan/compose        カード作成の中核（5問→AI）
+GET    /api/introduce/artisan/mine           自分のカード一覧
+GET    /api/introduce/artisan/postal         郵便番号→住所（zipcloud中継）
+GET    /api/introduce/artisan/geocode        屋号・住所→候補＋緯度経度（Nominatim中継）
+GET    /api/introduce/artisan/reverse        緯度経度→住所（Nominatim逆引き）
+POST   /api/introduce/artisan/upload-image   画像を1枚アップロード → { key }
+POST   /api/introduce/artisan                新規登録 → { ok, id, tags }
+PUT    /api/introduce/artisan/:id            修正
+DELETE /api/introduce/artisan/:id            削除
+GET    /api/introduce/artisan/:id            1件取得（修正フォーム用）
+GET    /api/introduce/image/:key             画像を返す（未ログインOK）
+GET    /api/introduce/user/liked             いいね一覧（要ログイン）
+GET    /api/introduce/user/next              カードを1枚（未ログインOK）
+POST   /api/introduce/user/:id/like          いいねトグル（要ログイン）
+GET    /api/introduce/user/:id               記事詳細（未ログインOK）
 ```
 
-### 所有するテーブル
+`/api/introduce/artisan/*` は職人ロールのみ（`requireArtisan`）。
+閲覧系（`/next`, `/:id`）は未ログインでも通す。いいね関連だけ要ログイン。
+`GET /api/introduce/image/:key` は `/api/introduce/artisan/*` の外にあり、認証を掛けていない。
+
+**画面（`GET /user`, `GET /artisan` など）はまだ無い。** フロントエンド担当の実装待ち。
+
+## カードの単位
+
+**品単位。伝統名でのグループ化はしない**（要件定義書3-2で確定）。
+`GET /api/introduce/user/next` は品を1件ランダムに返す。
+
+## 所有するテーブル
 
 ```
-cards            伝統・作品カード（記事）★共有。検索機能も読む
-card_images      記事画像（最大3枚）
-swipes           伝統単位のマッチング
+cards            紹介機能が所有。仕様書どおりの列。列を足していない
+card_images      画像（KVのキーとsort_orderを持つ）
+card_geo         住所検索で得た緯度経度（cards に列を足さないための外出し）
+card_i18n        カードの英語版（同上）
 likes            記事単位のいいね
-reviews          評価コメント
-tag_categories / tags   タグのカテゴリと小ジャンル
 ```
 
-### バインディング
+`swipes` `reviews` `tag_categories` / `tags` は作っていない
+（伝統名グループ化をやめたため swipes は不要、reviews はスコープ外、
+タグは `cards.tags` のカンマ区切りで足りている）。
+
+`card_embedding` `synonym` は検索機能の所有物。書き込みは
+`features/search/embed.js` `db.js` の公開関数を経由し、直接SQLは書いていない。
+
+## バインディング
 
 ```
-teame_taka_introduce   D1 Database
-teame_taka_images      KV Namespace（画像を base64 で保存。R2 は課金設定が必要なため不採用）
-AI                     Workers AI
-ASSETS                 Assets（./public）
+teame_taka_introduce   D1 Database（DB と同じ database_id を指す。wrangler.jsonc で解決済み）
+teame_images           KV Namespace（画像。生バイトで保存）
+AI                     Workers AI（検索の埋め込み。cf/baai/bge-m3）
+GEMINI_API_KEY         Secret（.dev.vars。compose の文章生成に使う）
+ASSETS                 未使用（フロントエンドの実装待ち）
 ```
+
+## 画像
+
+**KV に生バイトで保存する。base64 は経由しない。**
+
+旧README・仕様書には「base64 で保存」とあったが、5MBの画像は
+base64にすると約6.7MBになり、Workers無料プランのCPU上限（1リクエスト10ms）に
+デコードのコストが当たる可能性があるため、生バイト保存に変更した
+（設計書6章）。KVは生のバイト列をそのまま保存できるので、base64にする必要がない。
+
+`content_type` は KV の `metadata` に入れている。入れないと取り出すときに
+何の画像か分からず `content-type` を付けて返せない。
+
+上限は1枚5MB・1カード3枚まで。サーバー側でも強制している。
+
+## カード作成（compose）の契約
+
+```
+POST /api/introduce/artisan/compose
+{ "name": "...", "answers": [5個], "followups": [] }
+```
+
+判定は2段に分かれる：
+
+```
+空欄            → コード側。元の質問をそのまま出し直す（GEMINI_API_KEY 無しでも動く）
+薄いかどうか+文言 → Gemini側。分野の観点（工程の具体名・回数年数・材料・失敗条件）は
+                   プロンプトのヒントとしてのみ渡し、本文には使わせない
+```
+
+掘り下げは1周だけ。`followups` が空でないリクエストには必ず3文を返す。
+Gemini が落ちても、`GEMINI_API_KEY` が無くても、答えを連結した文でカードを作れる
+（レスポンスの `ai` が `false` になる）。
+
+**文章生成に使っているモデルは `gemini-flash-lite-latest`。**
+設計書記載の Gemini 2.5 Flash は実行時に404（新規キーでは利用不可）だったため、
+`gemini-flash-latest`（liteでない方）と比較したうえで、6回連続503だった
+`gemini-flash-latest` ではなく安定して成功した `gemini-flash-lite-latest` を採用した。
+
+## 認証
+
+`features/auth/` のセッションをそのまま使う（`readSessionCookie` / `userBySessionToken`）。
+`artisan_id` はセッションから取る。クエリ・bodyでは受け取らない。
 
 ## 未決事項
 
-- **D1 のバインディング名** — こちらは `teame_taka_introduce`、検索機能は `DB`。
-  1つの Worker にまとめると衝突する。**統合前に決める必要がある**
-- **言語** — 仕様書は「TypeScript / JavaScript」併記。このリポジトリは現状 JS
-- **カードの単位（種類 / 品）** — 議論中。未決
-- **統合リポジトリを使うことの合意** — 未確認。この枠は先行して用意しただけ
-- **「あいまい検索」という語が2箇所で別の意味に使われている** —
-  こちらは登録時の予測変換（レーベンシュタイン距離）、検索機能は意味検索（ベクトル）。
-  呼び分けが必要
+- タグの選択UI（`cards.tags` に入れる形は決まっているが、選ばせ方は未決）
+- `/dev/introduce` の見た目（フロントエンド担当。バックエンドは確認用のみ）
+- KVの無料枠（書き込み1,000/日。デモなら足りるが未確認）
+- 英語クエリでの段3ヒット精度（未検証寄り。"quiet atmosphere" は当たったが
+  "lacquer bowl" は当たらなかった実測あり。直すかは未定）
+- 髙橋さん・飯室さんの実装との統合（コードが入手できないため、仕様書を見て
+  同じAPIを立て直している。パス・リクエスト・レスポンスは仕様書どおりに
+  揃えているので、本人が戻れば差し替えられる）
