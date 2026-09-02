@@ -10,11 +10,10 @@
 
 import { QUESTIONS, buildComposePrompt } from "./prompt.js";
 
-// 【要確認】設計書3-4は Gemini 2.5 Flash だが、実行時に404
+// 設計書3-4は Gemini 2.5 Flash だが、実行時に404
 // (「models/gemini-2.5-flash is no longer available to new users」)。
-// ListModels には残っているが、このキーの generateContent では拒否される。
-// バージョン固定だと同じ理由でまた止まるため、常に最新のflashを指す
-// エイリアス gemini-flash-latest に暫定変更している。計画役の確認待ち。
+// gemini-flash-latest は6回連続503（高負荷）で実用にならず、
+// gemini-flash-lite-latest は安定して成功したためこちらを採用（設計書に反映済み）。
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
