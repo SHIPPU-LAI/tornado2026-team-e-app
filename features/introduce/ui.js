@@ -66,6 +66,15 @@ export function renderPage(questions) {
     <h2 style="margin-top:0;border-top:0;padding-top:0">2. カードの中身をAIに作らせる</h2>
     <label>伝統名</label>
     <input type="text" id="name" placeholder="例：輪島塗">
+    <label>職人名</label>
+    <input type="text" id="artisan_name" placeholder="例：輪島塗会館">
+    <p class="muted">架空のデータなら先頭に「（架空）」を付けてください。画面に架空と表示されます。</p>
+    <label>ふりがな（任意）</label>
+    <input type="text" id="name_kana" placeholder="例：わじまぬり">
+    <label>タグ（カンマ区切り。サーバー側で5個に切られます）</label>
+    <input type="text" id="tags" placeholder="例：漆器,食器,見学できる">
+    <label>HP URL（任意）</label>
+    <input type="text" id="hp_url" placeholder="https://...">
     <div id="questions"></div>
     <div class="followup" id="followup-box" hidden>
       <div id="followup-question"></div>
@@ -305,6 +314,10 @@ async function doRegister() {
   try {
     const body = {
       name: $("name").value,
+      artisan_name: $("artisan_name").value || undefined,
+      name_kana: $("name_kana").value || undefined,
+      hp_url: $("hp_url").value || undefined,
+      tags: $("tags").value.split(",").map((s) => s.trim()).filter(Boolean),
       description: $("ja").value.split("\\n").filter(Boolean).join(""),
       description_en: $("en").value.split("\\n").filter(Boolean).join(" "),
       region: $("region").value || undefined,
