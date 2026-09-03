@@ -18,20 +18,23 @@
   //
   // 恒久的には DB に寄せたいが、それは紹介機能側の一括置換が要るので後回し。
   //
-  // ローカル開発だけなら database_id はこのままで動く。
-  // リモートに作るときは `npx wrangler d1 create teame` で出た id を
-  // 【両方の行に】差し替える。片方だけ変えるとDBが分裂して、
-  // エラーを出さずに検索結果が常に0件になる。
+  // 2026-09-03 にリモートDBを作成し、両方の行に同じ id を入れた。
+  // 【触るときの注意】この2行は必ず同じ値にすること。
+  // 片方だけ変えるとDBが分裂して、エラーを出さずに検索結果が常に0件になる。
+  //
+  // 【wrangler の自動追記に注意】`wrangler d1 create` や `kv namespace create` で
+  // 「設定ファイルに追加しますか」と聞かれたら n を選ぶこと。
+  // Y にするとこのファイルが書き換えられ、コメントが全部消える（実際に消えた）。
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "teame",
-      "database_id": "local-dev-placeholder"
+      "database_id": "364a57d8-f0ff-4ccf-966c-f0de35b9593d"
     },
     {
       "binding": "teame_taka_introduce",
       "database_name": "teame",
-      "database_id": "local-dev-placeholder"
+      "database_id": "364a57d8-f0ff-4ccf-966c-f0de35b9593d"
     }
   ],
 
@@ -44,12 +47,11 @@
 
   // 紹介機能の画像保存用 KV（設計書 6章）。base64 で実体を持つ。
   //
-  // id はローカル開発用の仮値。リモートに作るときは
-  // `npx wrangler kv namespace create teame_images` で出た id に差し替える。
+  // 2026-09-03 にリモートに作成済み。
   "kv_namespaces": [
     {
       "binding": "teame_images",
-      "id": "local-dev-placeholder"
+      "id": "1e0ed43d9b1c45d6a679a21c8bb0e711"
     }
   ]
 }
