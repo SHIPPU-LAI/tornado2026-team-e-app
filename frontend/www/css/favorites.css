@@ -1,0 +1,559 @@
+/* ===================================================================
+   favorites.css — お気に入り画面
+   style.css / card-modal.css 側の共通トークン・クラス
+   （--color-*, .tag, .card-sub, .stat-badge, .pattern-blob,
+     .detail-modal-* 等）を前提とする
+=================================================================== */
+
+:root {
+    --fav-dark: #3d1c17;
+    --fav-shu: #c1440e;
+    --fav-shu-deep: #8f2e08;
+    --fav-gold-bg: #c98a4a;
+    --fav-cream: #fff8ee;
+}
+
+.fav-shell {
+    position: relative;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--fav-gold-bg);
+    overflow-x: hidden;
+}
+
+.top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 17px;
+    background: var(--fav-dark);
+}
+
+.top-bar .icon-btn {
+    background: none;
+    border: none;
+    color: var(--fav-cream);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.top-bar img {
+    width: 40px;
+}
+
+/* ---------- ヒーロー（赤い矢羽根模様＋タイトル） ---------- */
+
+.fav-hero {
+    position: relative;
+    height: 180px;
+    background-image: url("../images/scene-pattern-chevron.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 0 0 70% 32% / 0 0 120px 74px;
+    overflow: visible;
+    /* hidden → visible に変更 */
+    z-index: 1;
+    /* 雲(bm)より背面になるよう明示 */
+}
+
+.fav-hero-title {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    padding: 60px 0 0 28px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.6rem;
+    color: var(--fav-cream);
+    letter-spacing: 0.06em;
+}
+
+/* 白い雲（CSSのみで表現） */
+.fav-hero-cloud {
+    position: absolute;
+    z-index: 2;
+    background-image: url("../images/noren-cloud-a.png");
+    /* 既存の黄色い雲画像 */
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    /* 色を消して真っ白にする */
+    filter: brightness(0) invert(1);
+}
+
+/* 右上の雲：現状のまま変更なし */
+.fav-hero-cloud--tr {
+    width: 160px;
+    height: 67px;
+    top: 20px;
+    right: -10px;
+}
+
+.fav-hero-cloud--tr::before {
+    width: 40px;
+    height: 40px;
+    top: -18px;
+    left: 6px;
+}
+
+.fav-hero-cloud--tr::after {
+    width: 32px;
+    height: 32px;
+    top: -12px;
+    left: 42px;
+}
+
+/* 右下の雲：画像を使わない、シンプルな角丸長方形 */
+.fav-hero-cloud--bm {
+    width: 140px;
+    height: 30px;
+    /* 100px → 44px。横長長方形らしい比率に調整 */
+    bottom: 7px;
+    right: 35px;
+    z-index: 5;
+
+    background-image: none;
+    /* 共通スタイルの画像指定を打ち消す */
+    background-color: var(--fav-cream);
+    /* 白い塗りつぶし */
+    filter: none;
+    /* 共通スタイルのfilterも不要なので解除 */
+    border-radius: 999px;
+    /* 角丸の長方形（左右が半円になる） */
+}
+
+.fav-hero-cloud--bm::before,
+.fav-hero-cloud--bm::after {
+    content: none;
+}
+
+/* bmの雲には疑似要素は不要なので無効化 */
+.fav-hero-cloud--bm::before,
+.fav-hero-cloud--bm::after {
+    content: none;
+}
+
+/* 2つ目の長方形：1つ目と同じ形で、位置だけ左にずらす */
+.fav-hero-cloud--bm2 {
+    width: 100px;
+    /* 少し小さめにして、単調にならないよう変化をつけている */
+    height: 30px;
+    top: 30px;
+    left: -40px;
+    /* 1つ目(right: 20px)より左側に配置 */
+    z-index: 5;
+
+    background-image: none;
+    background-color: var(--fav-cream);
+    filter: none;
+    border-radius: 999px;
+}
+
+.fav-hero-cloud--bm2::before,
+.fav-hero-cloud--bm2::after {
+    content: none;
+}
+
+/* ---------- タグごとのセクション ---------- */
+
+.fav-main {
+    padding: 24px 0 40px;
+}
+
+.fav-section {
+    position: relative;
+    padding: 0 0 28px;
+}
+
+/* 棚のような模様の帯：カードの下半分あたりに背面で敷く */
+.fav-section::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    /* .fav-sectionの下パディング分、床の位置を合わせる */
+    height: 90px;
+
+    background-image:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 70%),
+        url("../images/footer-pattern.png");
+    background-repeat: no-repeat, repeat;
+    background-size: 100% 100%, 100% auto;
+
+    z-index: 0;
+}
+
+.fav-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 20px;
+    margin-bottom: 14px;
+}
+
+.fav-section-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.fav-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: var(--fav-cream);
+    white-space: nowrap;
+}
+
+.fav-section-count {
+    font-size: 0.85rem;
+    color: rgba(255, 248, 238, 0.75);
+    white-space: nowrap;
+}
+
+.fav-section-arrow {
+    color: rgba(255, 248, 238, 0.55);
+    font-size: 0.9rem;
+}
+
+.fav-edit-btn {
+    flex: 0 0 auto;
+    padding: 7px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--fav-shu);
+    background: transparent;
+    color: var(--fav-shu);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.fav-edit-btn.is-active {
+    background: var(--fav-shu);
+    color: var(--fav-cream);
+}
+
+.fav-row {
+    position: relative;
+    z-index: 1;
+    /* 棚の帯より前面に */
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 0 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.fav-row::-webkit-scrollbar {
+    display: none;
+}
+
+.fav-item {
+    position: relative;
+    flex: 0 0 auto;
+    width: 130px;
+    aspect-ratio: 3 / 4.2;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card), 0 14px 18px -10px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.fav-item-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(20, 8, 4, 0.7);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.fav-section.is-editing .fav-item-remove {
+    display: flex;
+}
+
+.fav-item-image {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+/* プレースホルダー用パレット（swipe-cardと同じ考え方） */
+.fav-item-image--1 {
+    background: linear-gradient(160deg, #3d1c17 0%, #7a3b2c 100%);
+}
+
+.fav-item-image--2 {
+    background: linear-gradient(160deg, #eef2f5 0%, #c7d6de 100%);
+}
+
+.fav-item-image--3 {
+    background: linear-gradient(160deg, #c1440e 0%, #7a2a0a 100%);
+}
+
+.fav-item-image--4 {
+    background: linear-gradient(160deg, #2c5b82 0%, #16324f 100%);
+}
+
+.fav-item-image--5 {
+    background: linear-gradient(160deg, #4a2e1a 0%, #7a4a24 100%);
+}
+
+.fav-empty {
+    padding: 30px 20px;
+    color: rgba(255, 248, 238, 0.8);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* ---------- ＋ タグ追加ボタン ---------- */
+
+.fav-add-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 36px;
+}
+
+.fav-add-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--fav-shu);
+    color: var(--fav-cream);
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+}
+
+.fav-add-btn:active {
+    background: var(--fav-shu-deep);
+}
+
+/* ---------- タグ選択シート ---------- */
+
+.fav-tagsheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(20, 8, 4, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.fav-tagsheet-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.fav-tagsheet {
+    width: 100%;
+    max-width: 480px;
+    max-height: 70vh;
+    background: var(--color-paper-light);
+    border-radius: 20px 20px 0 0;
+    padding: 18px 20px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    transform: translateY(24px);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.fav-tagsheet-overlay.is-open .fav-tagsheet {
+    transform: translateY(0);
+}
+
+.fav-tagsheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.fav-tagsheet-header h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+}
+
+.fav-tagsheet-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.fav-tagsheet-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 4px;
+    border: none;
+    background: none;
+    border-bottom: 1px solid var(--color-line);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--color-ink);
+    cursor: pointer;
+    text-align: left;
+}
+
+.fav-tagsheet-item:last-child {
+    border-bottom: none;
+}
+
+.fav-tagsheet-item.is-added {
+    color: var(--color-line);
+    cursor: not-allowed;
+}
+
+.fav-tagsheet-check {
+    color: var(--fav-shu);
+    font-weight: 700;
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）専用スタイル
+   ※スマホサイズ（iPhone等）で常に正しく動作するよう設定
+   ======================================================== */
+
+/* メニュー本体：初期状態は画面の左外（-100%）に強制的に隠す */
+.drawer-menu {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    background-color: #5E2727 !important;
+    /* アプリ共通の薄い紙色 */
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
+
+    /* カードスタックやポップアップよりも絶対に手前に配置 */
+    z-index: 999999 !important;
+
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 🔵 JSで「is-open」クラスがついたら左から引き出す */
+.drawer-menu.is-open {
+    transform: translateX(0) !important;
+}
+
+/* 背景の黒幕（オーバーレイ） */
+.menu-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background-color: rgba(0, 0, 0, 0.904) !important;
+    z-index: 999998 !important;
+    /* メニューのすぐ後ろ、その他アプリ要素より手前 */
+
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease !important;
+}
+
+/* 🔵 JSで「is-visible」クラスがついたら黒幕を表示する */
+.menu-overlay.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* ---- デザイン・見栄えの調整（アプリのえんじ色・フォントに統一） ---- */
+.drawer-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 20px 16px !important;
+    color: #faf6ec !important;
+}
+
+
+.close-btn {
+    background: none !important;
+    border: none !important;
+    color: #faf6ec !important;
+    font-size: 1.4rem !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+}
+
+.drawer-nav-list {
+    list-style: none !important;
+    padding: 12px 0 !important;
+    margin: 0 !important;
+}
+
+.drawer-nav-list li {
+    display: flex;
+    margin: 5% 1%;
+}
+
+.drawer-nav-list img {
+    width: 14%;
+    margin: 10px;
+    object-fit: contain;
+}
+
+.drawer-nav-list-bottom {
+    list-style: none !important;
+    padding: 12px 10px !important;
+    margin: 0 !important;
+    position: fixed;
+    bottom: 0 !important;
+}
+
+.drawer-nav-item {
+    display: block !important;
+    padding: 16px 10px !important;
+    color: #fbf7f7 !important;
+    /* 文字色（墨色） */
+    text-decoration: none !important;
+    font-family: "Zen Kaku Gothic Antique", sans-serif !important;
+    font-size: 1.3rem !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.drawer-nav-item span {
+    padding-left: 10px;
+}
+
+.drawer-nav-item img {
+    position: relative;
+    width: 15%;
+    bottom: -8px;
+}
+
+
+
+
+.drawer-nav-item:hover {
+    background-color: #f1e9d8 !important;
+}

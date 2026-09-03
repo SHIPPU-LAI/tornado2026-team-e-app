@@ -1,0 +1,344 @@
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+
+:root {
+  --color-ai: #16324f;
+  --color-ai-light: #2c5b82;
+  --color-shu: #c1440e;
+  --color-shu-dark: #9c3509;
+  --color-kin: #8a6a1f;
+  --color-kin-bg: #f3e6c4;
+  --color-paper: #f1e9d8;
+  --color-paper-light: #faf6ec;
+  --color-ink: #2b2420;
+  --color-ink-soft: #6b5d4f;
+  --color-line: #ddd0b5;
+  --radius: 4px;
+  --shadow-card: 0 1px 0 rgba(43, 36, 32, 0.06), 0 10px 24px -16px rgba(22, 50, 79, 0.35);
+  --font-display: "Shippori Mincho", serif;
+  --font-body: "Zen Kaku Gothic New", "Noto Sans JP", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  line-height: 1.7;
+}
+
+a {
+  color: var(--color-ai);
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.hero {
+  position: relative;
+  margin: 0 -16px 24px;
+  padding: 40px 16px 32px;
+  background: linear-gradient(180deg, var(--color-ai) 0%, var(--color-ai-light) 100%);
+  overflow: hidden;
+  text-align: center;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60px;
+  background:
+    radial-gradient(circle at 10% 100%, transparent 22px, var(--color-paper) 23px) 0 0/60px 60px,
+    radial-gradient(circle at 60% 100%, transparent 22px, var(--color-paper) 23px) 30px 0/60px 60px;
+  background-color: transparent;
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: #d8c894;
+  border: 1px solid rgba(216, 200, 148, 0.5);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #faf6ec;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.hero p {
+  color: #cfd9e2;
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--color-ai);
+}
+
+h2 {
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-bottom: 8px;
+  margin: 32px 0 16px;
+}
+
+.card {
+  background: var(--color-paper-light);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.card-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--color-ai) 0%, var(--color-ai-light) 100%);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 10px 0 4px;
+}
+
+.card-sub {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-shu);
+  color: #fff8ee;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-shu-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--color-ai);
+  color: var(--color-ai);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(22, 50, 79, 0.06);
+}
+
+.swipe-actions {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.stat-badge {
+  display: inline-block;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  margin-right: 6px;
+  color: var(--color-ink-soft);
+}
+
+.stat-badge strong {
+  color: var(--color-kin);
+}
+
+.tag {
+  display: inline-block;
+  background: var(--color-kin-bg);
+  color: var(--color-kin);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  margin-right: 4px;
+  font-weight: 500;
+}
+
+.field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-paper-light);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  margin-bottom: 10px;
+}
+
+.field:focus {
+  outline: 2px solid var(--color-ai-light);
+  outline-offset: 1px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius);
+}
+
+.suggestion-card {
+  display: block;
+  cursor: pointer;
+  border-color: var(--color-line);
+}
+
+.suggestion-card:hover {
+  border-color: var(--color-ai-light);
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 140px;
+  scroll-snap-align: start;
+  text-decoration: none;
+  color: inherit;
+}
+
+.carousel-item .card-image {
+  aspect-ratio: 1 / 1;
+  margin-bottom: 6px;
+}
+
+.carousel-item .card-title {
+  font-size: 0.9rem;
+  margin: 4px 0 2px;
+}
+
+.heart-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 2px 4px;
+  line-height: 1;
+}
+
+.heart-btn.liked {
+  color: var(--color-shu);
+}
+
+.heart-btn:not(.liked) {
+  color: var(--color-line);
+}
+
+.tradition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tradition-grid .card {
+  margin-bottom: 0;
+}
+
+.tradition-grid .card-image {
+  aspect-ratio: 1 / 1;
+}
+
+.article-list-item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.name-suggestion-list {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-paper-light);
+  margin-top: -6px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.name-suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.name-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.name-suggestion-item:hover {
+  background: var(--color-paper);
+}
+
+.name-suggestion-count {
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+  margin-left: 8px;
+}
