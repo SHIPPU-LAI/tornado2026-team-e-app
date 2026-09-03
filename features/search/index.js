@@ -14,9 +14,16 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import { facets, cardsMissingEmbedding, saveEmbedding, countEmbedded, listCards } from "./db.js";
+import {
+  facets,
+  cardsMissingEmbedding,
+  saveEmbedding,
+  countEmbedded,
+  listCards,
+  buildEmbeddingText,
+} from "./db.js";
 import { search } from "./search.js";
-import { embed, cardToText, EMBED_MODEL } from "./embed.js";
+import { embed, EMBED_MODEL } from "./embed.js";
 import { renderPage } from "./ui.js";
 
 const app = new Hono();
@@ -84,7 +91,8 @@ app.post("/api/search/reindex", async (c) => {
     let done = 0;
     for (let i = 0; i < targets.length; i += BATCH) {
       const chunk = targets.slice(i, i + BATCH);
-      const vectors = await embed(c.env.AI, chunk.map((card) => cardToText(card)));
+      const texts = await Promise.all(chunk.map((card) => buildEmbeddingText(db(c), card)));
+      const vectors = await embed(c.env.AI, texts);
       for (let j = 0; j < chunk.length; j++) {
         await saveEmbedding(db(c), chunk[j].id, vectors[j], EMBED_MODEL);
         done++;

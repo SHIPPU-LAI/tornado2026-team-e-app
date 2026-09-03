@@ -30,8 +30,8 @@ import { readSessionCookie, userBySessionToken } from "../auth/session.js";
 import { QUESTIONS } from "./prompt.js";
 import { composeCard } from "./compose.js";
 import { fetchPostal, fetchGeocode, fetchReverse } from "./address.js";
-import { embed, cardToText, EMBED_MODEL } from "../search/embed.js";
-import { saveEmbedding } from "../search/db.js";
+import { embed, EMBED_MODEL } from "../search/embed.js";
+import { saveEmbedding, buildEmbeddingText } from "../search/db.js";
 import {
   normalizeTags,
   insertCard,
@@ -166,7 +166,10 @@ async function reindexCard(c, cardId) {
   try {
     const card = await getCardPublic(db(c), cardId);
     if (!card) return;
-    const [vector] = await embed(c.env.AI, [cardToText(card)]);
+    // buildEmbeddingText が全件reindexと同じ経路（設計書8-2-b）。
+    // card_i18n(lang='en') があれば埋め込みテキストに混ぜる。無くても壊れない。
+    const text = await buildEmbeddingText(c.env.DB, card);
+    const [vector] = await embed(c.env.AI, [text]);
     await saveEmbedding(c.env.DB, cardId, vector, EMBED_MODEL);
   } catch (e) {
     console.error("[introduce] 埋め込み生成に失敗", e);

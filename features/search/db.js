@@ -4,6 +4,7 @@
 // 検索側が書き込むのは card_embedding と synonym の2つだけ。
 
 import { blockOf, coordsOf, prefecturesByBlock } from "./regions.js";
+import { cardToText } from "./embed.js";
 
 const CARD_COLS = `
   id, artisan_id, name, name_kana, artisan_name, description,
@@ -155,6 +156,24 @@ export async function cardsMissingEmbedding(db) {
     )
     .all();
   return results.map(shape);
+}
+
+// card_i18n は紹介機能の所有テーブル。ここでは読むだけ（cards を読むのと同じ扱い）。
+async function getEnglishI18n(db, cardId) {
+  const row = await db
+    .prepare("select name, description from card_i18n where card_id = ? and lang = 'en'")
+    .bind(cardId)
+    .first();
+  return row || null;
+}
+
+// 埋め込みに使うテキストを組み立てる唯一の経路（設計書8-2-b）。
+// 全件reindex（このファイルの呼び出し元）も、紹介機能の reindexCard()（1件）も、
+// 必ずここを通す。片方だけ英語入りだと結果が歪むため。
+// 英訳が無いカードでも落ちない（getEnglishI18n が null を返すだけ）。
+export async function buildEmbeddingText(db, card) {
+  const i18n = await getEnglishI18n(db, card.id);
+  return cardToText({ ...card, name_en: i18n?.name, description_en: i18n?.description });
 }
 
 export async function saveEmbedding(db, id, vector, model) {

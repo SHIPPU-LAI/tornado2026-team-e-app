@@ -42,6 +42,12 @@ export async function embed(ai, texts) {
 
 // カード1件を埋め込み用の文字列にする。
 // 検索でヒットさせたい情報を全部入れる。
+//
+// name_en / description_en は任意（card_i18n の英訳。設計書8-2-b）。
+// bge-m3は多言語モデルなので、日本語と英語を1つのベクトルに混ぜて
+// 入れられる。英語クエリが英訳の部分に直接当たるようにするため。
+// 英訳が無いカードでも card.name_en 等が undefined なら filter(Boolean) で
+// 単純に落ちるだけで、壊れない。
 export function cardToText(card) {
   return [
     card.name,
@@ -51,6 +57,8 @@ export function cardToText(card) {
     (card.tags || []).join(" "),
     card.description,
     card.history,
+    card.name_en,
+    card.description_en,
   ]
     .filter(Boolean)
     .join(" / ");
