@@ -5,6 +5,7 @@
 //   POST /api/auth/login
 //   POST /api/auth/logout
 //   GET  /api/auth/me        ← requireAuth
+//   GET  /dev/login          動作確認用の画面（成果物ではない）
 //
 // この feature が書き込むテーブル: users, sessions
 
@@ -20,6 +21,7 @@ import {
   setSessionCookie,
   clearSessionCookie,
 } from "./session.js";
+import { renderPage } from "./ui.js";
 
 const app = new Hono();
 
@@ -149,5 +151,8 @@ app.post("/api/auth/logout", async (c) => {
 
 app.use("/api/auth/me", requireAuth);
 app.get("/api/auth/me", (c) => c.json({ user: publicUser(c.get("user")) }));
+
+// 検証用の画面。成果物ではない。/login, /register はフロントエンド担当のために空けてある。
+app.get("/dev/login", (c) => c.html(renderPage()));
 
 export default app;

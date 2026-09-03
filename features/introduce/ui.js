@@ -41,6 +41,7 @@ export function renderPage(questions) {
   ul.plain li { font-size:.85rem; padding:.2rem 0; }
   code { background:var(--accent-soft,#f4ece7); padding:.05rem .35rem; border-radius:4px; }
   .followup { background:#fff8ec; border:1px solid #e6d3a3; border-radius:8px; padding:.7rem; margin-top:.7rem; }
+  .session { background:#fff; border:1px solid var(--line); border-radius:8px; padding:.6rem .8rem; margin-bottom:1rem; font-size:.85rem; }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -49,18 +50,8 @@ export function renderPage(questions) {
   <h1>紹介機能 動作確認</h1>
   <p class="sub">これは成果物ではありません。compose（5問→AI→3文）の流れを画面で確かめるためだけの画面です。</p>
 
-  <section class="box" id="login-box">
-    <h2 style="margin-top:0;border-top:0;padding-top:0">1. ログイン（職人アカウント）</h2>
-    <label>email</label>
-    <input type="email" id="email" autocomplete="username">
-    <label>password</label>
-    <input type="password" id="password" autocomplete="current-password">
-    <div class="row">
-      <button id="login">ログイン</button>
-      <button id="signup" class="ghost">新規登録も試す</button>
-    </div>
-    <div class="status" id="login-status"></div>
-  </section>
+  <div class="session" id="session-info">確認中…</div>
+  <div class="status" id="gate-status"></div>
 
   <section class="box" id="mine-box" hidden>
     <h2 style="margin-top:0;border-top:0;padding-top:0">自分のカード</h2>
@@ -190,36 +181,36 @@ function showLoggedInUI() {
   loadMine();
 }
 
-async function doLogin() {
-  setStatus("login-status", "ログイン中…");
-  try {
-    await api("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: $("email").value, password: $("password").value }),
-    });
-    setStatus("login-status", "ログインしました", "ok");
-    showLoggedInUI();
-  } catch (e) {
-    setStatus("login-status", e.message, "err");
-  }
+function hideCardUI() {
+  loggedIn = false;
+  $("mine-box").hidden = true;
+  $("compose-box").hidden = true;
+  $("images-box").hidden = true;
+  $("address-box").hidden = true;
+  $("register-box").hidden = true;
 }
 
-async function doSignup() {
-  setStatus("login-status", "新規登録中…（12文字以上のパスワードにしてください）");
+// ログインは /dev/login に分けた（設計書のフロント画面構成と揃えるため）。
+// この画面は開いたときに GET /api/auth/me を叩いて、未ログイン・一般ユーザー・
+// 職人の3状態を出し分けるだけにする。
+async function checkSession() {
+  hideCardUI();
   try {
-    await api("/api/auth/signup", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        email: $("email").value, password: $("password").value,
-        role: "artisan", display_name: "確認用工房",
-      }),
-    });
-    setStatus("login-status", "登録してログインしました", "ok");
+    const data = await api("/api/auth/me");
+    const u = data.user;
+    $("session-info").textContent = "ログイン中: " + u.email + "（role: " + u.role + "）";
+    if (u.role !== "artisan") {
+      $("gate-status").className = "status err";
+      $("gate-status").textContent =
+        "職人アカウントが必要です。/dev/login で職人アカウントに切り替えてください。";
+      return;
+    }
+    $("gate-status").textContent = "";
     showLoggedInUI();
-  } catch (e) {
-    setStatus("login-status", e.message, "err");
+  } catch {
+    $("session-info").textContent = "未ログイン";
+    $("gate-status").className = "status err";
+    $("gate-status").innerHTML = 'ログインしてください。<a href="/dev/login">/dev/login</a> へ';
   }
 }
 
@@ -463,8 +454,7 @@ async function doRegister() {
 
 function boot() {
   renderQuestions();
-  $("login").addEventListener("click", doLogin);
-  $("signup").addEventListener("click", doSignup);
+  checkSession();
   $("compose").addEventListener("click", () => { collectFollowupIfAny(); doCompose(); });
   $("upload-image").addEventListener("click", doUploadImage);
   $("postal-go").addEventListener("click", doPostal);
