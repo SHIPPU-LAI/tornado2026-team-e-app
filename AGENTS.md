@@ -98,12 +98,14 @@ npx wrangler d1 migrations create teame <名前>
 ### 2-b. `migrations/` に入れてはいけないもの
 
 ```
-dev-schema/cards.sql    紹介機能の cards の写し。ローカル開発専用
 seeds/local_seed.sql    ダミーデータ。中に delete from cards; が入っている
 ```
 
-**この2つを `migrations/` に置くと、`--remote` で流した瞬間に本番データが消えます。**
+**これを `migrations/` に置くと、`--remote` で流した瞬間に本番データが消えます。**
 適用は `npm run setup` から行ってください。
+
+（`dev-schema/cards.sql` はデプロイ前に廃止した。`cards` は
+`migrations/202609030901_cards_and_synonyms.sql` に入っている。詳細は設計書1-1-b）
 
 ### 2-c. サブアプリで `app.use("*")` を使わない
 
@@ -204,9 +206,8 @@ npm run dev
 `npm run setup` の中身:
 
 ```
-schema:local   dev-schema/cards.sql   紹介機能の cards をローカルに作る
-migrate        migrations/            検索機能のテーブル
-seed:apply     seeds/local_seed.sql   ダミー20件
+migrate        migrations/            cards・検索機能のテーブル・シノニム辞書
+seed:apply     seeds/local_seed.sql   ダミー20件（ローカル専用。delete込み）
 ```
 
 変更したら、**必ず動かして確認してください。**最低限これを見ます。

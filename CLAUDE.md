@@ -10,9 +10,9 @@
 - **他の機能が所有するテーブルに列を足さない。** 必要なものは自分の新テーブルに外出しする
 - **既存のマイグレーションを書き換えない。** 新規追加のみ。
   ファイル名は `YYYYMMDDHHMM_<機能>_<内容>.sql`（連番だと4人で衝突する）
-- **`dev-schema/` と `seeds/` を `migrations/` に移さない。**
-  `seeds/local_seed.sql` には `delete from cards;` が入っていて、
-  `--remote` で流すと本番のカードが消える
+- **`seeds/local_seed.sql` を `migrations/` に移さない。**
+  中に `delete from cards;` が入っていて、`--remote` で流すと本番のカードが消える。
+  本番用のダミーデータは `seeds/demo_cards.sql`（delete無し）を使う
 - **決まっていないことを勝手に決めない。** README.md の「未決事項」を確認し、
   埋めたくなったら人間に聞く
 - **Google Maps API は使わない**（チーム方針）。地図は OpenStreetMap

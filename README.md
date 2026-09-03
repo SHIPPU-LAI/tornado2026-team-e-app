@@ -160,39 +160,41 @@ JSON は snake_case
 
 ## データベース
 
-SQLを置く場所を3つに分けています。**この分け方には理由があります。**
+```
+migrations/     本番に流れる。cards・card_embedding・synonym・users 等すべて
+seeds/          ダミーデータ。用途によって流してよいものと悪いものがある
+```
 
-```
-migrations/     本番に流れる。検索機能の追加テーブルのみ
-dev-schema/     ローカル開発用。本番には流さない
-seeds/          ダミーデータ。本番には流さない
-```
+**`dev-schema/` は廃止した（2026-09-03、設計書1-1-b）。**
+もともと「`cards` は紹介機能が持ち込むので `migrations/` には置かない」
+という前提だったが、紹介機能がこのリポジトリの中で直接実装されたため、
+その前提が崩れた。`dev-schema/cards.sql` は「ローカル開発用」の扱いのまま
+`migrations/` に入っていなかったので、**`--remote` で migrations を流しても
+`cards` が本番に作られず、紹介機能の全APIが500になる**穴があった。
+`migrations/202609030901_cards_and_synonyms.sql` に `cards` の定義を移して塞いだ。
 
 | ファイル | 中身 | 本番に流す |
 |---|---|---|
-| `migrations/0002_search.sql` | `card_embedding`, `synonym` | **流す** |
-| `dev-schema/cards.sql` | 紹介機能の `cards` の写し | 流さない |
-| `seeds/local_seed.sql` | ダミー20件 | 流さない |
+| `migrations/0002_search.sql` | `card_embedding`, `synonym`（初期の骨組み） | **流す** |
+| `migrations/202609030900_introduce_auth.sql` | `users` `sessions` `likes` `card_geo` `card_images` `card_i18n` | **流す** |
+| `migrations/202609030901_cards_and_synonyms.sql` | `cards`、シノニム辞書78語 | **流す** |
+| `seeds/demo_cards.sql` | ダミー20件（`insert or ignore`、delete無し） | **流してよい** |
+| `seeds/local_seed.sql` | ダミー20件＋シノニム（`delete from cards;` 込み） | **流さない**（ローカル専用） |
 
-**なぜ `cards.sql` を `migrations/` から出したか。**
-`cards` は紹介機能が所有します。`migrations/` に `create table if not exists cards`
-が入っていると、紹介機能が持ち込んだ本物の `cards` 定義が
-**エラーも出さずに無視されます**（`if not exists` なので）。
-列が足りないテーブルのまま進んで、原因が分からなくなります。
+**なぜ `local_seed.sql` を `migrations/` にも `demo_cards.sql` にも使わないか。**
+中に `delete from cards;` が入っています。誰かが `--remote` を付けて実行した瞬間に、
+**本番のカードが全部消えます。**本番のデモ用データを入れたいときは
+`seeds/demo_cards.sql` を使ってください（`insert or ignore` なので複数回流しても壊れません）。
 
-**なぜ `local_seed.sql` を `migrations/` から出したか。**
-中に `delete from cards;` が入っています。誰かが `--remote` を付けて
-`wrangler d1 migrations apply` を実行した瞬間に、**本番のカードが全部消えます。**
-
-適用は `npm run setup` から行ってください。中身は3つを順に流すだけです。
+ローカルの適用は `npm run setup` から行ってください。
 
 ```
-npm run schema:local   dev-schema/cards.sql
-npm run migrate        migrations/
-npm run seed:apply     seeds/local_seed.sql
+npm run migrate        migrations/            cards・検索機能のテーブル・シノニム辞書
+npm run seed:apply     seeds/local_seed.sql   ダミー20件（ローカル専用）
 ```
 
-`seeds/local_seed.sql` は手で編集しないでください。元データを変えたら再生成します。
+`seeds/local_seed.sql` と `seeds/demo_cards.sql` は手で編集しないでください。
+元データ（`scripts/seed-data.js`）を変えたら再生成します。
 
 ```bash
 npm run seed
