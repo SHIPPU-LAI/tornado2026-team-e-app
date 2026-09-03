@@ -266,6 +266,23 @@ export async function getCardI18n(db, cardId, lang) {
     .first();
 }
 
+export async function countCards(db) {
+  const row = await db.prepare("select count(*) as n from cards").first();
+  return row.n;
+}
+
+// card_i18n(lang='en')が無いカードを返す。件数が増えても100バインドの罠を
+// 踏まないよう、in(...)は使わず全件読んでJS側で突き合わせる
+// （features/search/db.jsのcardsWithEmbeddingと同じ考え方）。
+export async function listCardsMissingEnglish(db) {
+  const { results: allCards } = await db.prepare(`select ${CARD_COLS} from cards`).all();
+  const { results: haveEn } = await db
+    .prepare("select card_id from card_i18n where lang = 'en'")
+    .all();
+  const haveSet = new Set(haveEn.map((r) => r.card_id));
+  return allCards.filter((c) => !haveSet.has(c.id)).map(shapeCard);
+}
+
 export async function upsertCardI18nEn(db, cardId, name, description, updatedAt) {
   await db
     .prepare(

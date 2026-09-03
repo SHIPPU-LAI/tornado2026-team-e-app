@@ -14,7 +14,7 @@ import { QUESTIONS, buildComposePrompt } from "./prompt.js";
 // (「models/gemini-2.5-flash is no longer available to new users」)。
 // gemini-flash-latest は6回連続503（高負荷）で実用にならず、
 // gemini-flash-lite-latest は安定して成功したためこちらを採用（設計書に反映済み）。
-const GEMINI_MODEL = "gemini-flash-lite-latest";
+export const GEMINI_MODEL = "gemini-flash-lite-latest";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 function isEmpty(answer) {

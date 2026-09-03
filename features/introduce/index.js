@@ -17,6 +17,7 @@
 //   POST   /api/introduce/user/:id/like     いいねトグル            ← requireAuth
 //   GET    /api/introduce/user/:id          記事詳細                未ログインOK
 //   GET    /dev/introduce                   compose動作確認用の画面（成果物ではない）
+//   POST   /api/introduce/translate-missing 英訳の一括生成（運用用。x-reindex-token）
 //
 // 【重要】静的パス（/compose, /mine, /postal, /geocode, /reverse, /liked, /next）は
 // :id より先に登録する。後から足す /name-kana /name-suggestions も
@@ -32,6 +33,7 @@ import { QUESTIONS } from "./prompt.js";
 import { composeCard } from "./compose.js";
 import { fetchPostal, fetchGeocode, fetchReverse } from "./address.js";
 import { renderPage } from "./ui.js";
+import { translateCard } from "./translate.js";
 import { embed, EMBED_MODEL } from "../search/embed.js";
 import { saveEmbedding, buildEmbeddingText } from "../search/db.js";
 import {
@@ -56,6 +58,8 @@ import {
   insertCardImages,
   getCardI18n,
   MAX_IMAGES,
+  countCards,
+  listCardsMissingEnglish,
 } from "./db.js";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -182,6 +186,46 @@ async function reindexCard(c, cardId) {
     console.error("[introduce] 埋め込み生成に失敗", e);
   }
 }
+
+// 英訳が無いカードをまとめて翻訳する（設計書8-2-b。運用用の口。
+// features/search/index.js の POST /api/search/reindex と同じ位置づけ）。
+// 職人ログインは要らない代わりに、REINDEX_TOKEN を使い回す
+// （新しいシークレットを増やさない）。未設定ならローカル開発を止めないため通す。
+const TRANSLATE_BATCH = 8; // Geminiの無料枠が10RPMのため、1回でこの件数まで
+
+app.post("/api/introduce/translate-missing", async (c) => {
+  const want = c.env.REINDEX_TOKEN;
+  if (want && c.req.header("x-reindex-token") !== want) {
+    return fail(c, "UNAUTHORIZED", "x-reindex-token が違います", 401);
+  }
+
+  const total = await countCards(db(c));
+  const missing = await listCardsMissingEnglish(db(c));
+  const batch = missing.slice(0, TRANSLATE_BATCH);
+
+  let translated = 0;
+  let failed = 0;
+
+  for (const card of batch) {
+    try {
+      const result = await translateCard(c.env.GEMINI_API_KEY, card);
+      const now = Date.now();
+      await upsertCardI18nEn(db(c), card.id, result.name, result.description, now);
+      // 英訳が埋め込みに混ざるよう、このカードの埋め込みを作り直す（設計書8-2-b）。
+      await reindexCard(c, card.id);
+      translated++;
+    } catch (e) {
+      // 1件失敗しても止めない。次のカードへ進む。
+      console.error("[introduce] translate-missing: 翻訳に失敗", card.id, e);
+      failed++;
+    }
+  }
+
+  // 失敗した分は card_i18n に書けていないので、まだ「未翻訳」のまま。
+  // batch.length ではなく translated の数だけ減らす（バッチ内で失敗した分と
+  // バッチに入らなかった分は、次回また missing に含まれる）。
+  return c.json({ translated, failed, remaining: missing.length - translated, total });
+});
 
 // lat/lng が両方とも数値で渡されたときだけ card_geo に保存する。
 // 無くてもカードは作れる（検索機能が都道府県の代表座標で代替する）。
