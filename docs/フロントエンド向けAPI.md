@@ -64,6 +64,7 @@ new Date(card.updated_at)
   "name": "輪島塗",
   "name_kana": "わじまぬり",
   "artisan_name": "（架空）輪島塗 山本工房",
+  "workshop_name": "山本工房",
   "description": "下地の漆を、20回以上重ねる。…",
   "hp_url": "https://…",
   "region": "石川県",
@@ -99,6 +100,12 @@ new Date(card.updated_at)
 ```
 
 **認証は要りません。**未ログインでも表示できます。
+
+### `workshop_name`（工房名）
+
+`artisan_name`（職人名）とは別の項目です。**表示専用**で、AIの5問には使われず、
+埋め込み・検索結果にも影響しません。任意入力のため、既存カードは `null` のことがあります。
+`null` のときのフォールバック（例：職人名だけ出す）は画面側で用意してください。
 
 ### `tags` は配列です
 
@@ -296,7 +303,8 @@ POST /api/introduce/artisan
 {
   "name": "輪島塗",
   "name_kana": "わじまぬり",
-  "artisan_name": "山本工房",
+  "artisan_name": "山本 太郎",
+  "workshop_name": "山本工房",
   "description": "（composeの3文を「」で連結したもの。職人が直した後の文）",
   "description_en": "（英訳。任意）",
   "hp_url": "https://…",

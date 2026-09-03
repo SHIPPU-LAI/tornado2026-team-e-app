@@ -77,6 +77,9 @@ export function renderPage(questions) {
     <label>職人名</label>
     <input type="text" id="artisan_name" placeholder="例：輪島塗会館">
     <p class="muted">架空のデータなら先頭に「（架空）」を付けてください。画面に架空と表示されます。</p>
+    <label>工房名（任意）</label>
+    <input type="text" id="workshop_name" placeholder="例：山本工房">
+    <p class="muted">表示専用の項目です。AIの質問には使いません。</p>
     <label>ふりがな（任意）</label>
     <input type="text" id="name_kana" placeholder="例：わじまぬり">
     <label>タグ（最大5個。既存のタグから選ぶか、無ければ自由入力で作れます）</label>
@@ -318,6 +321,7 @@ function resetForm() {
   editingId = null;
   $("name").value = "";
   $("artisan_name").value = "";
+  $("workshop_name").value = "";
   $("name_kana").value = "";
   selectedTags = [];
   renderTagUI();
@@ -350,6 +354,7 @@ async function startEdit(id) {
     editingId = id;
     $("name").value = c.name || "";
     $("artisan_name").value = c.artisan_name || "";
+    $("workshop_name").value = c.workshop_name || "";
     $("name_kana").value = c.name_kana || "";
     selectedTags = (c.tags || []).slice(0, MAX_TAGS);
     renderTagUI();
@@ -484,6 +489,7 @@ async function doRegister() {
     const body = {
       name: $("name").value,
       artisan_name: $("artisan_name").value || undefined,
+      workshop_name: $("workshop_name").value || undefined,
       name_kana: $("name_kana").value || undefined,
       hp_url: $("hp_url").value || undefined,
       tags: selectedTags,

@@ -297,6 +297,7 @@ app.post("/api/introduce/artisan", async (c) => {
     name,
     name_kana: body.name_kana ? String(body.name_kana) : null,
     artisan_name: body.artisan_name ? String(body.artisan_name) : null,
+    workshop_name: body.workshop_name ? String(body.workshop_name) : null,
     description,
     image_url: null, // ステップ5で card_images 経由に置き換える。未使用の列（cards のスキーマ参照）
     hp_url: body.hp_url ? String(body.hp_url) : null,
@@ -334,7 +335,7 @@ app.put("/api/introduce/artisan/:id", async (c) => {
   const artisanId = c.get("user").id;
 
   const fields = {};
-  const strCols = ["name", "name_kana", "artisan_name", "description", "hp_url", "region", "address", "history"];
+  const strCols = ["name", "name_kana", "artisan_name", "workshop_name", "description", "hp_url", "region", "address", "history"];
   for (const col of strCols) {
     if (Object.prototype.hasOwnProperty.call(body, col)) {
       fields[col] = body[col] === null ? null : String(body[col]);

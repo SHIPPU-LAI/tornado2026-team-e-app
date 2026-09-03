@@ -7,7 +7,7 @@ export const MAX_TAGS = 5;
 export const MAX_IMAGES = 3;
 
 const CARD_COLS = `
-  id, artisan_id, name, name_kana, artisan_name, description,
+  id, artisan_id, name, name_kana, artisan_name, workshop_name, description,
   image_url, hp_url, region, address, history, tags, lang, created_at, updated_at
 `;
 
@@ -37,9 +37,9 @@ export async function insertCard(db, card) {
   await db
     .prepare(
       `insert into cards
-        (id, artisan_id, name, name_kana, artisan_name, description,
+        (id, artisan_id, name, name_kana, artisan_name, workshop_name, description,
          image_url, hp_url, region, address, history, tags, lang, created_at, updated_at)
-       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       card.id,
@@ -47,6 +47,7 @@ export async function insertCard(db, card) {
       card.name,
       card.name_kana,
       card.artisan_name,
+      card.workshop_name,
       card.description,
       card.image_url,
       card.hp_url,
@@ -81,7 +82,7 @@ export async function listMineCards(db, artisanId) {
 // 更新できたら true、他人のカード（該当行なし）なら false。
 export async function updateCardForArtisan(db, id, artisanId, fields, updatedAt) {
   const cols = [
-    "name", "name_kana", "artisan_name", "description",
+    "name", "name_kana", "artisan_name", "workshop_name", "description",
     "image_url", "hp_url", "region", "address", "history", "tags",
   ];
   const sets = [];
