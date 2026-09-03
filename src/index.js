@@ -46,16 +46,16 @@ const FEATURES = [
   {
     dir: "frontend/",
     label: "フロントエンド（画面）",
-    status: "external",
-    page: "/ , /search , /user , /login , /artisan",
+    status: "ready",
+    page: "/",
     api: "—",
-    note: "パスは空けてある（/ , /search , /user , /login , /artisan）。API仕様は docs/フロントエンド向けAPI.md",
+    note: "frontend/www を Workers Assets として配信。API仕様は docs/フロントエンド向けAPI.md",
   },
 ];
 
-// 【重要】トップページは route() より前に定義する。
-// 後に置くと、サブアプリが "/" を持っていた場合に黙って奪われる（Hono は先勝ち）。
-app.get("/", (c) => {
+// 【重要】"/" はフロントエンド（Workers Assets、frontend/www/index.html）に譲った。
+// この統合状況ページは検証用の入口として /dev に置いてある。
+app.get("/dev", (c) => {
   const LABEL = {
     ready: '<span class="ok">実装済み</span>',
     stub: '<span class="ng">スタブ</span>',
@@ -125,8 +125,8 @@ app.get("/", (c) => {
           <code>src/index.js</code> に <code>app.route("/", 機能)</code> を1行足すだけです。
           各機能は自分の絶対パスを自分で持ちます</li>
       <li><b>画面（見た目）はフロントエンドの担当です。</b>
-          <code>/dev/*</code> はバックエンドの動作確認用で、成果物ではありません。
-          本番の画面を置けるよう <code>/search</code> などのパスは空けてあります</li>
+          <code>/</code> は Workers Assets（<code>frontend/www</code>）が配信しています。
+          <code>/dev/*</code> はバックエンドの動作確認用で、成果物ではありません</li>
       <li><b>本番はここで動いています</b>（デプロイ済み）</li>
       <li>フロントエンド向けのAPI仕様は <code>docs/フロントエンド向けAPI.md</code> にあります</li>
       <li>残りの未決事項は README.md にまとめてあります</li>
