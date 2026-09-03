@@ -1,0 +1,339 @@
+/* ===================================================================
+   search.css — 検索画面
+   style.css / card-modal.css 側の共通トークン・クラス
+   （--color-*, .tag, .btn, .detail-modal-* 等）を前提とする
+=================================================================== */
+
+:root {
+    --search-dark: #3d1c17;
+    --search-shu: #c1440e;
+    --search-shu-deep: #8f2e08;
+    --search-bg: #faf3e4;
+    --search-cream: #fff8ee;
+}
+
+.search-shell {
+    position: relative;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--search-bg);
+    overflow-x: hidden;
+}
+
+.search-shell .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 17px;
+    background: var(--search-dark);
+}
+
+.search-shell .top-bar .icon-btn {
+    background: none;
+    border: none;
+    color: var(--search-cream);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.top-bar-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--search-cream);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.top-bar-home-link span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar-home-link img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.top-bar-home-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 検索フォーム ---------- */
+
+.search-hero {
+    padding: 28px 22px 20px;
+    background: linear-gradient(160deg, var(--search-dark) 0%, #6b2c22 100%);
+    color: var(--search-cream);
+}
+
+.search-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--search-cream);
+    margin: 0 0 16px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 14px 16px;
+    border-radius: 999px;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: var(--search-cream);
+    color: var(--color-ink);
+}
+
+.search-input:focus {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 1px;
+}
+
+.search-submit-btn {
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 0 24px;
+}
+
+.search-clear-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 248, 238, 0.5);
+    background: transparent;
+    color: var(--search-cream);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.search-clear-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- 絞り込みチップ ---------- */
+
+.search-filters {
+    padding: 20px 22px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.search-filter-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--search-dark);
+    margin: 0 0 10px;
+}
+
+.search-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.search-chip-row:empty::after {
+    content: "登録された項目がありません";
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+}
+
+.search-chip {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-line);
+    background: #fff;
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.search-chip.is-selected {
+    border-color: var(--search-shu);
+    background: var(--search-shu);
+    color: var(--search-cream);
+    font-weight: 700;
+}
+
+/* ---------- 検索結果 ---------- */
+
+.search-results {
+    padding: 20px 22px 40px;
+}
+
+.search-result-count {
+    font-size: 0.9rem;
+    color: var(--color-ink-soft);
+    margin: 0 0 14px;
+}
+
+.search-result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.search-result-card {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-line);
+    border-radius: 16px;
+    background: var(--search-cream);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-result-card:hover {
+    border-color: var(--search-shu);
+    box-shadow: var(--shadow-card);
+}
+
+.search-result-thumb {
+    flex: 0 0 auto;
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+}
+
+.search-result-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.search-result-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--search-dark);
+}
+
+.search-result-region {
+    font-size: 0.8rem;
+    color: var(--color-ink-soft);
+}
+
+.search-result-teaser {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.search-result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.search-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+    border: 1px dashed var(--color-line);
+    border-radius: var(--radius);
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しています（全ページで1本化）。
+   ======================================================== */
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   絞り込みと検索結果を横に並べ、横幅を活かす。
+   ============================================ */
+@media (min-width: 1024px) {
+    .search-shell {
+        max-width: none;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .search-hero,
+    .search-filters,
+    .search-results {
+        padding-left: 56px;
+        padding-right: 56px;
+    }
+
+    .search-hero {
+        padding-top: 40px;
+        padding-bottom: 28px;
+    }
+
+    .search-hero h1 {
+        font-size: 2rem;
+    }
+
+    .search-form {
+        max-width: 640px;
+    }
+
+    .search-body-columns {
+        display: flex;
+        align-items: flex-start;
+        gap: 40px;
+    }
+
+    .search-filters {
+        flex: 0 0 280px;
+        padding-top: 32px;
+    }
+
+    .search-results {
+        flex: 1 1 auto;
+        padding-top: 32px;
+    }
+
+    .search-result-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .search-result-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

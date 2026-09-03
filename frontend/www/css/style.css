@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 
 :root {
   --color-ai: #16324f;
@@ -14,8 +14,20 @@
   --color-line: #ddd0b5;
   --radius: 4px;
   --shadow-card: 0 1px 0 rgba(43, 36, 32, 0.06), 0 10px 24px -16px rgba(22, 50, 79, 0.35);
-  --font-display: "Shippori Mincho", serif;
+  --font-display: "Zen Kaku Gothic New", sans-serif;
   --font-body: "Zen Kaku Gothic New", "Noto Sans JP", sans-serif;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 * {
@@ -341,4 +353,443 @@ h2 {
   color: var(--color-ink-soft);
   white-space: nowrap;
   margin-left: 8px;
+}
+
+/* ============================================================
+   🍔 ハンバーガーメニュー（左ドロワー）共通スタイル
+   全ページ共通。ここ1箇所だけを直せば、どのページにも反映される。
+   ============================================================ */
+.drawer-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: #5E2727;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+  z-index: 999999;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 縦にヘッダー／上部メニュー／下部メニューを並べ、
+     下部メニューは margin-top:auto で下端に押し出す。
+     position:fixed + bottom:0 をやめたことで、文字サイズを
+     大きくして中身が増えても、メニューの外にはみ出さず
+     この枠内で伸び縮み・スクロールするようになる。 */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.drawer-menu.is-open {
+  transform: translateX(0);
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.904);
+  z-index: 999998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.menu-overlay.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px;
+  color: #faf6ec;
+  flex: 0 0 auto;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #faf6ec;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.drawer-nav-list {
+  list-style: none;
+  padding: 10px 10px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.drawer-nav-list li {
+  margin: 4px 0;
+}
+
+/* 項目ごとにホバー範囲がバラつかないよう、アイコン・文字を
+   必ず同じ <a class="drawer-nav-item"> の中に入れる前提のスタイル。
+   display:flex にすることで、アイコン部分も含めた行全体が
+   ホバー・タップの対象になる。 */
+.drawer-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 14px;
+  border-radius: 14px;
+  color: #fbf7f7;
+  text-decoration: none;
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  transition: background-color 0.15s ease;
+}
+
+.drawer-nav-item img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+/* 画像アイコンが無い項目（プロフィール／ログアウト等）用の絵文字アイコン。
+   画像アイコンと同じ26px四方の枠に収め、見た目の大きさを揃える。 */
+.drawer-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 1.3rem;
+  flex: 0 0 auto;
+}
+
+/* ホバー時：白系ではなく濃い赤茶＋角丸（角丸は上のborder-radiusで統一） */
+.drawer-nav-item:hover,
+.drawer-nav-item:focus-visible {
+  background-color: #7a3324;
+}
+
+.drawer-nav-list-bottom {
+  list-style: none;
+  padding: 10px 10px calc(16px + env(safe-area-inset-bottom));
+  margin: auto 0 0;
+  /* ↑ position:fixed;bottom:0 の代わりに、flexの余白吸収で
+     常に .drawer-menu の下端に自然に収まるようにしている */
+  flex: 0 0 auto;
+}
+
+.drawer-nav-list-bottom li {
+  margin: 4px 0;
+}
+
+/* ============================================================
+   PC向けレイアウト（幅1024px以上）
+   スマホ版のハンバーガー→ドロワーの仕組みは、
+   「常時表示の左サイドバー」に置き換える。
+   スマホ枠を中央に浮かせるのではなく、サイドバーの隣に
+   本体画面（app-shell / fav-shell / genre-shell）を
+   横幅いっぱいに広げて、本来のPC画面として表示する。
+   ============================================================ */
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    align-items: flex-start;
+    min-height: 100vh;
+    background: var(--color-ink);
+  }
+
+  /* サイドバーが常時表示になるので、開閉ボタン・黒幕は不要 */
+  #openMenuBtn {
+    display: none;
+  }
+
+  .menu-overlay {
+    display: none !important;
+  }
+
+  /* ドロワー → 常設サイドバーへ */
+  .drawer-menu {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    flex: 0 0 260px;
+    width: 260px !important;
+    height: 100vh !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 10;
+    order: -1;
+  }
+
+  .drawer-menu .close-btn {
+    display: none;
+  }
+
+  /* 本体画面はサイドバーの残り幅いっぱいに広がる */
+  .app-shell,
+  .fav-shell,
+  .genre-shell,
+  .newuser-shell,
+  .search-shell,
+  .login-shell {
+    flex: 1 1 auto;
+    max-width: none;
+    width: auto;
+    min-height: 100vh;
+    height: auto;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+
+
+/* ============================================================
+   文字の大きさ設定ポップアップ
+   ハンバーガーメニュー内「文字の大きさ」から開く。
+   全ページ共通（js/font-size.js と対で使う）。
+   ============================================================ */
+.fontsize-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  /* drawer-menu(999999)より手前に表示する */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(20, 8, 4, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.fontsize-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fontsize-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-paper-light);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+  transform: translateY(24px);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.fontsize-modal-overlay.is-open .fontsize-modal {
+  transform: translateY(0);
+}
+
+.fontsize-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.fontsize-modal-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-ink);
+}
+
+.fontsize-modal-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-paper);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.fontsize-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fontsize-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--color-line);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.fontsize-option-btn .fontsize-preview {
+  flex: 0 0 auto;
+  width: 40px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-ink);
+  line-height: 1;
+  text-align: center;
+}
+
+.fontsize-option-btn .fontsize-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.fontsize-option-btn.is-selected {
+  border-color: var(--color-shu);
+  background: var(--color-kin-bg);
+}
+
+.fontsize-option-btn.is-selected .fontsize-check {
+  margin-left: auto;
+  color: var(--color-shu);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+@media (min-width: 700px) {
+  .fontsize-modal-overlay {
+    align-items: center;
+  }
+
+  .fontsize-modal {
+    border-radius: 20px;
+  }
+}
+
+/* ============================================================
+   言語設定ポップアップ
+   ハンバーガーメニュー内「言語設定」から開く。
+   全ページ共通（js/language.js と対で使う）。
+   見た目はfontsize-modalと同じ考え方（別クラス名にして独立させている）。
+   ============================================================ */
+.language-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(20, 8, 4, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.language-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.language-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-paper-light);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+  transform: translateY(24px);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.language-modal-overlay.is-open .language-modal {
+  transform: translateY(0);
+}
+
+.language-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.language-modal-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-ink);
+}
+
+.language-modal-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-paper);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.language-modal-note {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  margin: 0 0 18px;
+}
+
+.language-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.language-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--color-line);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.language-option-btn .language-flag {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.language-option-btn .language-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.language-option-btn.is-selected {
+  border-color: var(--color-shu);
+  background: var(--color-kin-bg);
+}
+
+.language-option-btn.is-selected .language-check {
+  margin-left: auto;
+  color: var(--color-shu);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+@media (min-width: 700px) {
+  .language-modal-overlay {
+    align-items: center;
+  }
+
+  .language-modal {
+    border-radius: 20px;
+  }
 }

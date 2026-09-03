@@ -1,0 +1,321 @@
+/* ===================================================================
+   newuser.css — 「初めてご利用の方へ」ページ
+   パソコンに不慣れな方にも読みやすいよう、文字を大きめに、
+   1つの塊に情報を詰め込みすぎない構成にしている。
+   style.css 側の共通トークン（--color-*, .btn 等）を前提とする。
+=================================================================== */
+
+:root {
+    --nu-dark: #3d1c17;
+    --nu-shu: #c1440e;
+    --nu-shu-deep: #8f2e08;
+    --nu-bg: #faf3e4;
+    --nu-cream: #fff8ee;
+}
+
+.newuser-shell {
+    position: relative;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--nu-bg);
+    overflow-x: hidden;
+}
+
+.newuser-shell .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 17px;
+    background: var(--nu-dark);
+}
+
+.newuser-shell .top-bar .icon-btn {
+    background: none;
+    border: none;
+    color: var(--nu-cream);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* アイコンだけに頼らず、必ず言葉を添えた「ホームへ」リンク */
+.top-bar-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--nu-cream);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.top-bar-home-link span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar-home-link img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.top-bar-home-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 導入部（サイトの目的） ---------- */
+
+.nu-hero {
+    padding: 36px 22px 30px;
+    background: linear-gradient(160deg, var(--nu-dark) 0%, #6b2c22 100%);
+    color: var(--nu-cream);
+}
+
+.nu-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1.5;
+    color: var(--nu-cream);
+    margin: 0 0 16px;
+}
+
+.nu-hero p {
+    font-size: 1.08rem;
+    line-height: 2;
+    margin: 0;
+    color: rgba(255, 248, 238, 0.92);
+}
+
+/* ---------- 共通セクション見出し ---------- */
+
+.nu-section {
+    padding: 32px 22px;
+}
+
+.nu-section+.nu-section {
+    border-top: 1px solid var(--color-line);
+}
+
+.nu-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--nu-dark);
+    margin: 0 0 20px;
+    line-height: 1.6;
+}
+
+/* ---------- 「このサイトでできること」カード ---------- */
+
+.nu-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.nu-feature-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--nu-cream);
+    border: 1px solid var(--color-line);
+    border-radius: 16px;
+    padding: 18px 18px;
+}
+
+.nu-feature-icon {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-kin-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+}
+
+.nu-feature-body h3 {
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    color: var(--nu-dark);
+    margin: 4px 0 6px;
+}
+
+.nu-feature-body p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--color-ink-soft);
+    margin: 0;
+}
+
+/* ---------- 使い方（番号つきステップ） ---------- */
+
+.nu-step-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.nu-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.nu-step-number {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--nu-shu);
+    color: var(--nu-cream);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nu-step-body h3 {
+    font-size: 1.08rem;
+    color: var(--nu-dark);
+    margin: 6px 0 6px;
+    font-weight: 700;
+}
+
+.nu-step-body p {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--color-ink-soft);
+    margin: 0;
+}
+
+.nu-step-image {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: var(--color-ink-soft);
+}
+
+.nu-step-image img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    /* 元画像が白抜きのため、黒いシルエットとして表示する */
+    filter: brightness(0);
+}
+
+/* ---------- 文字を大きくする方法（ヒント） ---------- */
+
+.nu-tip-box {
+    background: var(--color-kin-bg);
+    border: 1px solid var(--color-line);
+    border-radius: 16px;
+    padding: 20px 20px;
+}
+
+.nu-tip-box h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--nu-dark);
+    margin: 0 0 12px;
+}
+
+.nu-tip-box p {
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--color-ink);
+    margin: 0 0 8px;
+}
+
+.nu-tip-box p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- 困ったときは ---------- */
+
+.nu-support {
+    text-align: center;
+    padding: 8px 0 4px;
+}
+
+.nu-support p {
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--color-ink-soft);
+    margin: 0 0 20px;
+}
+
+/* サイトを見てみるボタン：押しやすいよう大きめに */
+.nu-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 58px;
+    font-size: 1.15rem;
+    border-radius: 999px;
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しました（全ページで1本化）。
+   ======================================================== */
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   他ページと同じく、常設サイドバー化して横幅いっぱいに広げる。
+   読みやすさを保つため、本文の最大幅は一定に抑える。
+   ============================================ */
+@media (min-width: 1024px) {
+    .newuser-shell {
+        max-width: none;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .nu-hero,
+    .nu-section {
+        padding-left: 56px;
+        padding-right: 56px;
+    }
+
+    .nu-hero h1,
+    .nu-hero p,
+    .nu-feature-list,
+    .nu-step-list,
+    .nu-tip-box,
+    .nu-support {
+        max-width: 640px;
+    }
+
+    .nu-support {
+        max-width: none;
+    }
+
+    .nu-support p,
+    .nu-cta-btn {
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

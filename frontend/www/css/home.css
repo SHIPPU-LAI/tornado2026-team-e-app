@@ -251,7 +251,7 @@
 }
 
 .swipe-card-title {
-  font-family: "Zen Kaku Gothic Antique" !important;
+  font-family: "Zen Kaku Gothic New" !important;
   font-weight: 700;
   font-size: 1.35rem;
   color: #fff8ee;
@@ -324,7 +324,7 @@
   width: 80px;
 }
 .swipe-feedback-label {
-  font-family: "Zen Kaku Gothic Antique" !important;
+  font-family: "Zen Kaku Gothic New" !important;
   font-weight: 700;
   font-size: 1.6rem;
   color: #fff8ee;
@@ -385,7 +385,7 @@
   border: none;
   padding: 4px 10px;
   cursor: pointer;
-  font-family: "Zen Kaku Gothic Antique" !important;
+  font-family: "Zen Kaku Gothic New" !important;
 }
 
 .nav-item.active {
@@ -419,7 +419,7 @@
 /* ---- お気に入り画面 ---- */
 .favorites-title {
   color: #faf6ec;
-  font-family: "Zen Kaku Gothic Antique" !important;
+  font-family: "Zen Kaku Gothic New" !important;
   font-size: 1.05rem;
   margin: 0;
 }
@@ -445,257 +445,57 @@
 }
 
 /* ========================================================
-   🍔 ハンバーガーメニュー（左ドロワー）専用スタイル
-   ※スマホサイズ（iPhone等）で常に正しく動作するよう設定
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しました（全ページで1本化）。
    ======================================================== */
-
-/* メニュー本体：初期状態は画面の左外（-100%）に強制的に隠す */
-.drawer-menu {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 280px !important;
-  height: 100vh !important;
-  background-color: #5E2727 !important;
-  /* アプリ共通の薄い紙色 */
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
-
-  /* カードスタックやポップアップよりも絶対に手前に配置 */
-  z-index: 999999 !important;
-
-  transform: translateX(-100%) !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-/* 🔵 JSで「is-open」クラスがついたら左から引き出す */
-.drawer-menu.is-open {
-  transform: translateX(0) !important;
-}
-
-/* 背景の黒幕（オーバーレイ） */
-.menu-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  background-color: rgba(0, 0, 0, 0.904) !important;
-  z-index: 999998 !important;
-  /* メニューのすぐ後ろ、その他アプリ要素より手前 */
-
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 0.3s ease !important;
-}
-
-/* 🔵 JSで「is-visible」クラスがついたら黒幕を表示する */
-.menu-overlay.is-visible {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-/* ---- デザイン・見栄えの調整（アプリのえんじ色・フォントに統一） ---- */
-.drawer-header {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 20px 16px !important;
-  color: #faf6ec !important;
-}
-
-
-.close-btn {
-  background: none !important;
-  border: none !important;
-  color: #faf6ec !important;
-  font-size: 1.4rem !important;
-  cursor: pointer !important;
-  padding: 4px !important;
-}
-
-.drawer-nav-list {
-  list-style: none !important;
-  padding: 12px 0 !important;
-  margin: 0 !important;
-}
-
-.drawer-nav-list li {
-  display: flex;
-  margin: 5% 1%;
-}
-
-.drawer-nav-list img {
-  width: 14%;
-  margin: 10px;
-  object-fit: contain;
-}
-
-.drawer-nav-list-bottom {
-  list-style: none !important;
-  padding: 12px 10px !important;
-  margin: 0 !important;
-  position: fixed;
-  bottom: 0 !important;
-}
-
-.drawer-nav-item {
-  display: block !important;
-  padding: 16px 10px !important;
-  color: #fbf7f7 !important;
-  /* 文字色（墨色） */
-  text-decoration: none !important;
-  font-family: "Zen Kaku Gothic Antique", sans-serif !important;
-  font-size: 1.3rem !important;
-  transition: background-color 0.2s ease !important;
-}
-.drawer-nav-item span{
-  padding-left: 10px;
-}
-
-.drawer-nav-item img{
-  position: relative;
-  width: 15%;
-  bottom: -8px;
-}
-
-
-
-
-.drawer-nav-item:hover {
-  background-color: #f1e9d8 !important;
-}
-
 
 /* ============================================
-   ＋α：タブレット／PCサイズ
-   ベースはスマホ想定。広い画面ではカードとフレームを少し拡大し、
-   アプリらしさを保つため中央に据え置く。
+   ＋α：パソコンサイズ（幅1024px以上）
+   スマホ枠を中央に浮かせるのではなく、
+   左サイドバー（style.css側で常設化）の隣に
+   本来のPC画面として横幅を活かしたレイアウトを組む。
+   カードスタックと操作ボタンを横並びに配置する。
    ============================================ */
-@media (min-width: 700px) {
-  body {
-    background: var(--home-dark, #2b1a14);
-  }
-
-  .app-shell {
-    max-width: 420px;
-    min-height: 92vh;
-    margin: 4vh auto;
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45);
-  }
-
-  .card-stack {
-    max-width: 330px;
-  }
-}
-
 @media (min-width: 1024px) {
   .app-shell {
-    max-width: 460px;
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+    margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .home-main {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+    padding: 40px 56px;
   }
 
   .card-stack {
-    max-width: 365px;
+    max-width: 420px;
+    aspect-ratio: 5 / 7.2;
+    margin: 0;
   }
 
-  /* ========================================================
-   🍔 ハンバーガーメニュー（左ドロワー）強制表示用スタイル
-   ======================================================== */
-
-  /* メニュー本体：画面の一番手前に強制配置 */
-  .drawer-menu {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 280px !important;
-    height: 100vh !important;
-    background-color: #faf6ec !important;
-    /* 薄い紙色 */
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
-
-    /* 最前面（カードやモーダルよりも上）に持ってくる */
-    z-index: 999999 !important;
-
-    /* 初期状態は左側に完全に隠す */
-    transform: translateX(-100%) !important;
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  .home-main .swipe-actions {
+    flex-direction: column;
+    width: auto;
+    max-width: none;
+    gap: 28px;
   }
 
-  /* 🔵 JSで「is-open」クラスがついたら左から引っ張り出す */
-  .drawer-menu.is-open {
-    transform: translateX(0) !important;
+  .swipe-btn {
+    min-width: 96px;
+    height: 96px;
   }
 
-  /* 背景の黒幕 */
-  .menu-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
-
-    /* メニューのすぐ下に配置 */
-    z-index: 999998 !important;
-
-    /* 初期状態は非表示（クリックもできない状態） */
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.3s ease !important;
-  }
-
-  /* 🔵 JSで「is-visible」クラスがついたら黒幕を表示する */
-  .menu-overlay.is-visible {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
-
-  /* ---- メニュー内の見栄え調整（アプリの「えんじ色」に統一） ---- */
-  .drawer-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 20px 16px !important;
-    background-color: #3d1c17 !important;
-    /* home.cssの--home-darkと同じ色 */
-    color: #faf6ec !important;
-  }
-
-  .drawer-title {
-    font-family: "Zen Kaku Gothic Antique", serif !important;
-    font-weight: 700 !important;
-    font-size: 1.1rem !important;
-  }
-
-  .close-btn {
-    background: none !important;
-    border: none !important;
-    color: #faf6ec !important;
-    font-size: 1.4rem !important;
-    cursor: pointer !important;
-    padding: 4px !important;
-  }
-
-  .drawer-nav-list {
-    list-style: none !important;
-    padding: 12px 0 !important;
-    margin: 0 !important;
-  }
-
-  .drawer-nav-item {
-    display: block !important;
-    padding: 16px 20px !important;
-    color: #2b2420 !important;
-    text-decoration: none !important;
-    font-family: "Zen Kaku Gothic Antique", sans-serif !important;
-    font-size: 0.95rem !important;
-    border-bottom: 1px solid #ddd0b5 !important;
-    transition: background-color 0.2s ease !important;
-  }
-
-  .drawer-nav-item:hover {
-    background-color: #f1e9d8 !important;
-  }
-
-  .drawer-nav-item.active {
-    color: #c1440e !important;
-    /* 朱色 */
-    font-weight: 700 !important;
-    background-color: rgba(193, 68, 14, 0.05) !important;
+  .top-bar {
+    padding-left: 40px;
+    padding-right: 40px;
   }
 }
