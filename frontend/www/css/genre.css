@@ -1,0 +1,608 @@
+/* ===================================================================
+   genre.css — ジャンル選択（のれん）画面
+=================================================================== */
+
+:root {
+  --genre-maroon: #521c1c;
+  --genre-maroon-deep: #3a1212;
+  --genre-navy: #1c3a5c;
+  --genre-navy-line: rgba(255, 255, 255, 0.16);
+  --genre-orange: #dd9636;
+  --genre-orange-deep: #c97a22;
+  --genre-hex-line: #b8431e;
+  --genre-cream: #fbf1de;
+  --genre-ink: #2a1810;
+
+  --genre-top-cover: #453625;
+  --genre-scene-bg-closed: #FFB957;
+  /* 暖簾が閉まっている間 */
+  --genre-scene-bg-open: #FBAF46;
+  /* 暖簾が開いた後 */
+
+  --genre-font-display: "Shippori Mincho", serif;
+  --genre-font-body: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
+}
+
+.genre-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 430px;
+  height: 100vh;
+  margin: 0 auto;
+  background: var(--genre-maroon);
+  overflow: hidden;
+  font-family: var(--genre-font-body);
+}
+
+.genre-shell .top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--genre-top-cover);
+  color: var(--genre-cream);
+  overflow: hidden;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.genre-shell .top-bar .icon-btn {
+  background: transparent;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition:
+    opacity 0.6s ease 0.15s,
+    transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1) 0.15s;
+  pointer-events: none;
+}
+
+.genre-shell.is-opened .top-bar .icon-btn {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.genre-main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---------- 舞台 ---------- */
+
+.genre-scene {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--genre-scene-bg-closed);
+  transition: background-color 1.2s ease;
+  overflow: hidden;
+}
+
+.genre-scene.is-revealed {
+  background: var(--genre-scene-bg-open);
+}
+
+.genre-scene-lead {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 28px 28px 4px;
+  color: var(--genre-cream);
+  font-family: var(--genre-font-display);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s;
+}
+
+.genre-scene.is-revealed .genre-scene-lead {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- ふわふわ浮かぶ雲 ---------- */
+/* ---------- 暖簾が開いた後に現れる浮雲（新しい画像を使用） ---------- */
+
+.floating-cloud {
+  position: absolute;
+  z-index: 3;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0;
+  transition: opacity 1s ease 0.6s;
+  animation: cloud-drift 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.genre-scene.is-revealed .floating-cloud {
+  opacity: 1;
+}
+
+.floating-cloud--1 {
+  width: 140px;
+  height: 60px;
+  top: 16%;
+  left: -20px;
+  background-image: url("../images/scene-cloud-a.png");
+  animation-duration: 16s;
+}
+
+.floating-cloud--2 {
+  width: 190px;
+  height: 90px;
+  bottom: 22%;
+  right: -10px;
+  background-image: url("../images/scene-cloud-b.png");
+  animation-duration: 19s;
+  animation-delay: 2s;
+}
+
+@keyframes cloud-drift {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+
+  50% {
+    transform: translateX(30px) translateY(-8px);
+  }
+
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* ---------- 器のシルエット ---------- */
+/* ---------- ジャンル選択（横スクロール・自動流れ） ---------- */
+
+.genre-scroll {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 0 0 22px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Firefox */
+
+  cursor: grab;
+  /* ← 追加：つかめる場所だと分かるように */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease 0.4s;
+}
+
+.genre-scroll::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari */
+}
+
+.genre-scene.is-revealed .genre-scroll {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.genre-track {
+  display: flex;
+  gap: 16px;
+  padding: 0 20px;
+  width: max-content;
+}
+
+.genre-btn {
+  appearance: none;
+  border: none;
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--genre-maroon);
+  color: var(--genre-cream);
+  font-family: var(--genre-font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.genre-btn:hover,
+.genre-btn:focus-visible {
+  transform: scale(1.08);
+}
+
+.genre-btn:active {
+  transform: scale(0.96);
+}
+
+/* ---------- 四隅の模様（矢羽根・青海波） ---------- */
+
+.scene-pattern {
+  position: absolute;
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity 1s ease 0.6s;
+  /* 浮雲と同じタイミング・速さ */
+}
+
+.genre-scene.is-revealed .scene-pattern {
+  opacity: 1;
+}
+
+.scene-pattern--chevron {
+  background-image: url("../images/scene-pattern-chevron.png");
+  z-index: 1;
+}
+
+.scene-pattern--wave {
+  background-image: url("../images/scene-pattern-wave.png");
+  z-index: 2;
+}
+
+.scene-pattern--tl {
+  width: 300px;
+  height: 300px;
+  top: -70px;
+  left: -70px;
+}
+
+.scene-pattern--tr {
+  width: 150px;
+  height: 150px;
+  top: -10px;
+  left: 38%;
+}
+
+.scene-pattern--bl {
+  width: 190px;
+  height: 190px;
+  bottom: 150px;
+  left: -70px;
+}
+
+.scene-pattern--br {
+  width: 320px;
+  height: 320px;
+  bottom: 40px;
+  right: -90px;
+}
+
+/* ================================================================
+   のれん層（上下しなり方式・最終安定版）
+   ================================================================ */
+
+.noren-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: pointer;
+
+  --noren-color: #15335B;
+  --noren-height: 90%;
+  --noren-radius: 15px;
+
+  --noren-split-1: 30;
+  --noren-split-2: 70;
+
+  --circle-size: 290px;
+  --pattern-tile: 150px;
+
+  transform-origin: 70% 55%;
+  transform: scale(1);
+  transition: transform 2s cubic-bezier(0.6, 0, 0.85, 1);
+}
+
+.noren-layer.is-zooming {
+  transform: scale(9);
+}
+
+.noren-layer.is-hidden {
+  display: none;
+}
+
+.noren-leaves {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--noren-height);
+  display: flex;
+  overflow: hidden;
+}
+
+/* 布1枚ぶんの「外枠」。全体の左右への傾き(rotate)はここだけに適用。
+   継ぎ目はこの回転には巻き込まれないので、常に一致したまま動く。 */
+.noren-leaf {
+  position: relative;
+  flex: 0 0 auto;
+  height: 110%;
+  display: flex;
+  flex-direction: column;
+  transform-origin: top center;
+  will-change: transform;
+}
+
+/* 左パネル：見た目の横幅を広げ、境目位置(30%)は変えないまま
+   左端だけ画面外へはみ出させる */
+.noren-leaf--left {
+  width: calc(var(--noren-split-1) * 1% + 60px);
+  margin-left: -60px;
+}
+
+.noren-leaf--center {
+  width: calc((var(--noren-split-2) - var(--noren-split-1)) * 1%);
+}
+
+/* 右パネル：既存のまま */
+.noren-leaf--right {
+  width: calc((100 - var(--noren-split-2)) * 1% + 60px);
+  margin-right: -60px;
+}
+
+/* 布の上側42%：しなりはskewXのみ、かつごくわずかに留める */
+.noren-leaf-upper {
+  position: relative;
+  z-index: 2;
+  height: 42%;
+  background-color: var(--noren-color);
+  overflow: hidden;
+  transform-origin: top center;
+  will-change: transform;
+}
+
+/* 布の下側58%：しなりはskewXのみ。角度を小さく抑えることで、
+   断面（隙間）が視認できるほど傾かないようにしている。 */
+.noren-leaf-lower {
+  position: relative;
+  z-index: 1;
+  height: 58%;
+  margin-top: -1px;
+  background-color: var(--noren-color);
+  border-radius: 0 0 var(--noren-radius) var(--noren-radius);
+  overflow: hidden;
+  transform-origin: top center;
+  will-change: transform;
+
+  -webkit-mask-image: linear-gradient(to bottom, #000 100%, #000 100%);
+  mask-image: linear-gradient(to bottom, #000 100%, #000 100%);
+}
+
+/* 布の"ひだ"を表現する明暗グラデーション */
+.noren-leaf-upper::after,
+.noren-leaf-lower::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0) 22%,
+      rgba(0, 0, 0, 0.16) 50%,
+      rgba(255, 255, 255, 0) 78%,
+      rgba(255, 255, 255, 0.16) 100%);
+  background-size: 240% 100%;
+  background-position: var(--fold-pos, 50%) 0;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* 中央パネルのタイトル文字。
+   .noren-leaf(外枠)の直下に置くことで、外枠のrotate(揺れ)に
+   そのまま追従する。upper/lowerのしなり(skewX)には影響されない。 */
+.noren-title {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  /* upper(2)・lower(1)より前面 */
+  margin: 0;
+
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+
+  font-family: "Zen Antique", serif;
+  font-size: 6rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  color: #fff8ee;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+  pointer-events: none;
+}
+
+/* ---- 青海波模様の円 ---- */
+.noren-pattern {
+  position: absolute;
+  width: var(--circle-size);
+  height: var(--circle-size);
+  border-radius: 50%;
+  background-image: url("../images/noren-pattern.png");
+  background-size: var(--pattern-tile) var(--pattern-tile);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.noren-pattern--seamA-left {
+  top: -16.7%;
+  right: calc(var(--circle-size) / -2.5);
+  background-position: 0px 0px;
+}
+
+.noren-pattern--seamA-right {
+  top: -16.7%;
+  left: calc(var(--circle-size) / -1.6);
+  background-position: 0px 0px;
+}
+
+.noren-pattern--seamB-left {
+  top: 47.6%;
+  right: calc(var(--circle-size) / -1.1);
+  background-position: 40px 20px;
+}
+
+.noren-pattern--seamB-right {
+  top: 47.6%;
+  left: calc(var(--circle-size) / -7.5);
+  background-position: 40px 20px;
+}
+
+/* この2つのtopは仮の初期値。実際はJS(alignAllSeamCircles)が
+   起動時・リサイズ時に実測して正確な値へ自動補正する */
+.noren-pattern--seamB-left-lower {
+  top: -170px !important;
+  right: calc(var(--circle-size) / -1.1);
+  background-position: 40px 20px;
+}
+
+.noren-pattern--seamB-right-lower {
+  top: -170px !important;
+  left: calc(var(--circle-size) / -7.5);
+  background-position: 40px 20px;
+}
+
+.noren-pattern--seamC-left {
+  top: 39.7%;
+  right: calc(var(--circle-size) / -1.5);
+  background-position: 20px 20px;
+}
+
+.noren-pattern--seamC-right {
+  top: 39.7%;
+  left: calc(var(--circle-size) / -3);
+  background-position: 20px 20px;
+}
+
+/* ---- 雲の模様 ---- */
+.noren-cloud-pattern {
+  position: absolute;
+  width: 180px;
+  height: 80px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  pointer-events: none;
+}
+
+.noren-cloud-pattern--seamD-left {
+  top: 48.3%;
+  right: -70px;
+  background-image: url("../images/noren-cloud-a.png");
+}
+
+.noren-cloud-pattern--seamD-right {
+  top: 48.3%;
+  left: -120px;
+  background-image: url("../images/noren-cloud-a.png");
+}
+
+.noren-cloud-pattern--seamD-left2 {
+  top: 59.5%;
+  right: -110px;
+  background-image: url("../images/noren-cloud-a.png");
+}
+
+.noren-cloud-pattern--seamD-right2 {
+  top: 59.5%;
+  left: -70px;
+  background-image: url("../images/noren-cloud-a.png");
+}
+
+.noren-cloud-pattern--seamE-left {
+  top: 22%;
+  right: -120px;
+  background-image: url("../images/noren-cloud-b.png");
+}
+
+.noren-cloud-pattern--seamE-right {
+  top: 22%;
+  left: -40px;
+  background-image: url("../images/noren-cloud-b.png");
+}
+
+/* ================================================================
+   画面下部の帯
+   ================================================================ */
+
+.genre-footer {
+  position: relative;
+  z-index: 5;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--genre-maroon);
+  background-image: url("../images/footer-pattern.png");
+  background-repeat: repeat;
+  background-size: 130% auto;
+
+  min-height: 140px;
+  transition: background 0.8s ease;
+  /* 切り替え時に滑らかにフェード */
+}
+
+/* 暖簾が開いた後：模様をやめて、上下グラデーションに切り替える */
+.genre-shell.is-opened .genre-footer {
+  background-image: none;
+  background-color: transparent;
+  background: linear-gradient(to bottom, #552121 0%, #722020 100%);
+}
+
+.footer-hint {
+  position: absolute;
+  margin: 0;
+  color: var(--genre-cream);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  transition: opacity 0.4s ease;
+}
+
+.genre-login-btn {
+  width: 100%;
+  max-width: 320px;
+  border-color: var(--genre-cream);
+  color: var(--genre-cream);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease 0.3s;
+}
+
+.genre-shell.is-opened .footer-hint {
+  opacity: 0;
+}
+
+.genre-shell.is-opened .genre-login-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .noren-layer,
+  .noren-leaf,
+  .genre-scene-lead,
+  .floating-cloud,
+  .top-bar,
+  .top-bar .icon-btn,
+  .footer-hint,
+  .genre-login-btn {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

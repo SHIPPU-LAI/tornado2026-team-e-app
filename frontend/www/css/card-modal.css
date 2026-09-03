@@ -1,0 +1,298 @@
+/* ============================================
+   card-modal.css
+   カードをタップした時に表示する詳細ポップアップ
+   配色は赤・金・白のトーン（いただいた参考画像イメージ）
+   home.html から読み込んで使う想定
+   ============================================ */
+
+.detail-modal-overlay {
+  --modal-dark: #3d1c17;      /* 濃いえんじ（ヘッダー・フッター相当） */
+  --modal-gold: #eaa33e;      /* 金・オレンジ系の背景 */
+  --modal-gold-deep: #d98f2c;
+
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 10, 8, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.detail-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---- ポップアップ本体（ボトムシート） ---- */
+.detail-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-paper-light);
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.detail-modal-overlay.is-open .detail-modal {
+  transform: translateY(0);
+}
+
+/* ---- ヘッダー（閉じる／お気に入り） ---- */
+.detail-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--modal-dark);
+  flex: 0 0 auto;
+}
+
+.modal-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff8ee;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.modal-icon-btn:active {
+  transform: scale(0.9);
+}
+
+.modal-icon-btn.heart-btn.liked {
+  background: var(--color-shu);
+  color: #fff8ee;
+}
+
+/* ハート用の弾む＋波紋アニメーション（詳細ページ版と共通の考え方） */
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.modal-icon-btn.heart-btn.pop {
+  animation: heartPop 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* ---- スクロールする中身（ビジュアル＋本文） ---- */
+.detail-modal-scroll {
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ---- ビジュアルエリア（金の背景＋装飾模様＋商品イメージ） ---- */
+.detail-modal-visual {
+  position: relative;
+  background: var(--modal-gold);
+  padding: 30px 20px 26px;
+  overflow: hidden;
+}
+
+/* 伝統模様の装飾（角の丸いブロブに幾何学模様／波模様を敷き込む） */
+.pattern-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.9;
+}
+
+/* 市松風の斜め幾何学模様（赤系） */
+.pattern-blob--kikko {
+  background-color: var(--color-shu);
+  background-image:
+    repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.16) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(-60deg, rgba(0, 0, 0, 0.12) 0 8px, transparent 8px 16px);
+}
+
+/* 青海波風の波模様（白系） */
+.pattern-blob--wave {
+  background-color: var(--color-paper-light);
+  background-image: repeating-radial-gradient(
+    circle at 50% 120%,
+    transparent 0 6px,
+    rgba(234, 163, 62, 0.55) 6px 8px,
+    transparent 8px 26px
+  );
+}
+
+.pattern-blob--tl {
+  width: 150px;
+  height: 150px;
+  top: -55px;
+  left: -55px;
+}
+
+.pattern-blob--bl {
+  width: 120px;
+  height: 120px;
+  bottom: -55px;
+  left: -35px;
+}
+
+.pattern-blob--br {
+  width: 110px;
+  height: 110px;
+  bottom: -45px;
+  right: -30px;
+}
+
+/* 商品イメージ（実写画像が入るまでのプレースホルダー）
+   home.css の .swipe-card-image--n と同じパレットに合わせている */
+.detail-modal-image {
+  position: relative;
+  z-index: 1;
+  width: 148px;
+  height: 148px;
+  margin: 16px auto 0;
+  border-radius: 50%;
+  box-shadow: 0 12px 26px -10px rgba(0, 0, 0, 0.45);
+}
+
+.detail-modal-image--1 { background: linear-gradient(160deg, #3d1c17 0%, #7a3b2c 100%); }
+.detail-modal-image--2 { background: linear-gradient(160deg, #eef2f5 0%, #c7d6de 100%); }
+.detail-modal-image--3 { background: linear-gradient(160deg, #c1440e 0%, #7a2a0a 100%); }
+.detail-modal-image--4 { background: linear-gradient(160deg, #2c5b82 0%, #16324f 100%); }
+.detail-modal-image--5 { background: linear-gradient(160deg, #4a2e1a 0%, #7a4a24 100%); }
+
+/* ---- 本文 ---- */
+.detail-modal-body {
+  background: var(--color-paper-light);
+  padding: 18px 20px 8px;
+}
+
+.detail-modal-body h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--modal-dark);
+  margin: 22px 0 10px;
+}
+
+.detail-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--modal-dark);
+  margin: 10px 0 2px;
+}
+
+.detail-modal-body .tag {
+  background: var(--modal-gold);
+  color: var(--modal-dark);
+}
+
+.detail-stats {
+  margin: 14px 0 4px;
+}
+
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.detail-tags .tag {
+  background: var(--color-kin-bg);
+  color: var(--color-kin);
+}
+
+/* ---- 職人プレビュー ---- */
+.craftsman-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin: 8px 0 4px;
+  transition: border-color 0.15s ease;
+}
+
+.craftsman-preview:hover {
+  border-color: var(--modal-gold-deep);
+}
+
+.craftsman-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, var(--modal-dark) 0%, #6b2c22 100%);
+}
+
+.craftsman-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.craftsman-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.craftsman-arrow {
+  font-size: 1.4rem;
+  color: var(--color-ink-soft);
+}
+
+/* ---- 下部の意思表示ボタン ---- */
+.detail-modal-actions {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 14px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+  background: var(--color-paper-light);
+  border-top: 1px solid var(--color-line);
+  flex: 0 0 auto;
+}
+
+.detail-modal-actions .btn-primary {
+  background: var(--color-shu);
+}
+
+.detail-modal-actions .btn-primary:hover {
+  background: var(--color-shu-dark);
+}
+
+/* ============================================
+   ＋α：タブレット／PC
+   ボトムシートではなく中央配置のダイアログに切り替える
+   ============================================ */
+@media (min-width: 700px) {
+  .detail-modal-overlay {
+    align-items: center;
+  }
+
+  .detail-modal {
+    max-width: 400px;
+    max-height: 82vh;
+    border-radius: 20px;
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease;
+  }
+
+  .detail-modal-overlay.is-open .detail-modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ホーム | 伝統工芸マッチング</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <link rel="stylesheet" href="../css/card-modal.css">
+</head>
+
+<body>
+
+  <div class="app-shell">
+
+    <header class="top-bar">
+      <button id="openMenuBtn" class="icon-btn" aria-label="メニュー">☰</button>
+      <div class="top-bar-actions">
+        <a href="../html/favorites.html" class="icon-btn" id="favoritesBtn" aria-label="お気に入り">
+          <img src="../images/Grocery Shelf.png" alt="">
+        </a>
+        <button class="icon-btn" aria-label="検索">
+          <img src="../images/search_icon.png" alt="">
+        </button>
+      </div>
+    </header>
+
+    <!-- 右／左スワイプ中に画面端を色付けするフィードバック用オーバーレイ（カードより前面に表示） -->
+    <div class="swipe-feedback-overlay swipe-feedback-overlay--like" id="like-overlay" aria-hidden="true">
+      <img src="../images/swipe_icon.png" class="swipe-image--like" alt="">
+      <span class="swipe-feedback-label">保存</span>
+    </div>
+    <div class="swipe-feedback-overlay swipe-feedback-overlay--skip" id="skip-overlay" aria-hidden="true">
+      <img src="../images/swipe_icon.png" class="swipe-image--skip" alt="">
+      <span class="swipe-feedback-label">飛ばす</span>
+    </div>
+
+    <main class="home-main">
+
+      <!-- カードスタック（JSが中身を生成／タグはカードごとに個別に持つ） -->
+      <div class="card-stack" id="card-stack"></div>
+
+      <!-- スワイプ操作ボタン -->
+      <div class="swipe-actions">
+        <button id="skip-btn" class="btn btn-outline swipe-btn">✖</button>
+        <button id="like-btn" class="btn btn-primary swipe-btn">❤︎</button>
+      </div>
+
+    </main>
+
+    <!-- 下部ナビゲーション（参考用の骨組み）
+    <nav class="bottom-nav">
+      <button class="nav-item active">
+        <span class="nav-icon">⌂</span>
+        <span>ホーム</span>
+      </button>
+      <button class="nav-item">
+        <span class="nav-icon">🔍</span>
+        <span>検索</span>
+      </button>
+      <button class="nav-item">
+        <span class="nav-icon">♡</span>
+        <span>いいね</span>
+      </button>
+      <button class="nav-item">
+        <span class="nav-icon">☺</span>
+        <span>プロフィール</span>
+      </button>
+    </nav> -->
+
+  </div>
+
+  <!-- ==== カード詳細ポップアップ ==== -->
+  <div class="detail-modal-overlay" id="detail-modal-overlay">
+    <div class="detail-modal" role="dialog" aria-modal="true">
+
+      <div class="detail-modal-header">
+        <button class="modal-icon-btn" id="modal-close-btn" aria-label="閉じる">✕</button>
+        <button class="modal-icon-btn heart-btn" id="modal-heart-btn" aria-label="お気に入り">♥</button>
+      </div>
+
+      <div class="detail-modal-scroll">
+
+        <div class="detail-modal-visual">
+          <span class="pattern-blob pattern-blob--kikko pattern-blob--tl"></span>
+          <span class="pattern-blob pattern-blob--wave pattern-blob--bl"></span>
+          <span class="pattern-blob pattern-blob--kikko pattern-blob--br"></span>
+          <div class="detail-modal-image" id="modal-image"></div>
+        </div>
+
+        <div class="detail-modal-body">
+          <div class="tag" id="modal-tag">金工</div>
+          <h2 class="detail-modal-title" id="modal-title">南部鉄器 鉄瓶</h2>
+          <p class="card-sub" id="modal-region">岩手県</p>
+
+          <div class="detail-stats" id="modal-stats"></div>
+
+          <h3>この工芸品について</h3>
+          <p id="modal-description"></p>
+
+          <h3>特徴</h3>
+          <div class="detail-tags" id="modal-tags"></div>
+
+          <h3>この工芸品をつくる職人</h3>
+          <a href="#" class="craftsman-preview">
+            <div class="craftsman-avatar"></div>
+            <div class="craftsman-info">
+              <div class="craftsman-name" id="modal-craftsman-name"></div>
+              <div class="card-sub" id="modal-craftsman-workshop"></div>
+            </div>
+            <span class="craftsman-arrow">›</span>
+          </a>
+        </div>
+
+      </div>
+
+      <div class="detail-modal-actions">
+        <button id="modal-skip-btn" class="btn btn-outline swipe-btn-card">✕</button>
+        <button id="modal-like-btn" class="btn btn-primary swipe-btn-card">♥</button>
+      </div>
+
+    </div>
+  </div>
+<!-- 背景の黒幕 -->
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+  <!-- ハンバーガーメニュー本体 -->
+  <nav class="drawer-menu" id="drawerMenu">
+    <div class="drawer-header">
+      <button class="close-btn" id="closeMenuBtn">✕</button>
+    </div>
+    <ul class="drawer-nav-list">
+      <li><img src="../images/home.png" alt=""><a href="../html/home.html" class="drawer-nav-item active">ホーム</a></li>
+      <li><img src="../images/login.png" alt="" style="width: 12%;"><a href="#" class="drawer-nav-item">ログイン</a></li>
+      <li><img src="../images/newuser.png" alt="" style="width: 10%;"><a href="#" class="drawer-nav-item">初めてご利用の方へ</a></li>
+    </ul>
+
+
+    <ul class="drawer-nav-list-bottom">
+      <li>
+        <a href="#" class="drawer-nav-item active">
+          <img src="../images/langage.png" alt="">
+          <span>言語設定</span>
+        </a>
+      </li>
+      <li style="display: flex;">
+        <p style="width: fit-content; color: white; font-size: 1.5rem; margin: 0; line-height: 60px;"><small>あ</small>あ</p>
+        <a href="#" class="drawer-nav-item">文字の大きさ</a>
+      </li>
+      <li>
+        <a href="#" class="drawer-nav-item">
+          <img src="../images/setting.png" alt="">
+          <span>その他設定</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <script src="../js/home.js"></script>
+  <script src="../js/card-modal.js"></script>
+</body>
+
+</html>
