@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ジャンルを選ぶ | 伝統工芸マッチング</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Antique&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/genre.css">
+</head>
+
+<body>
+
+  <div class="genre-shell" id="genre-shell">
+
+    <header class="top-bar" id="top-bar">
+      <button id="openMenuBtn" class="icon-btn" aria-label="メニュー">☰</button>
+      <button class="icon-btn" aria-label="検索">🔍</button>
+    </header>
+
+    <main class="genre-main">
+
+      <div class="genre-scene" id="genre-scene">
+
+        <!-- 四隅の模様（矢羽根＝赤、青海波＝白オレンジ） -->
+        <span class="scene-pattern scene-pattern--chevron scene-pattern--tl"></span>
+        <span class="scene-pattern scene-pattern--wave scene-pattern--tr"></span>
+        <span class="scene-cloud scene-cloud--tl"></span>
+
+        <span class="scene-pattern scene-pattern--wave scene-pattern--bl"></span>
+        <span class="scene-pattern scene-pattern--chevron scene-pattern--br"></span>
+
+        <!-- 浮雲：暖簾が開いた後にだけ現れる -->
+        <span class="floating-cloud floating-cloud--1"></span>
+        <span class="floating-cloud floating-cloud--2"></span>
+        <!-- 器のシルエット（仮のプレースホルダーのまま。文字ラベルは削除） -->
+        <!-- ジャンル選択：横並び・自動スクロール -->
+        <div class="genre-scroll" id="genre-scroll">
+          <div class="genre-track" id="genre-track">
+            <!-- JSがここにボタンを生成します（2セット分） -->
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- のれん層：起動直後は揺れ、タップでくぐって開く -->
+      <div class="noren-layer" id="noren-layer" aria-hidden="true">
+        <div class="noren-leaves" id="noren-leaves">
+
+          <div class="noren-leaf noren-leaf--left" id="leaf-left">
+            <div class="noren-leaf-upper" id="leaf-left-upper">
+              <span class="noren-pattern noren-pattern--seamA-left"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-left2"></span>
+            </div>
+            <div class="noren-leaf-lower" id="leaf-left-lower">
+              <span class="noren-pattern noren-pattern--seamC-left"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-left"></span>
+            </div>
+          </div>
+
+          <div class="noren-leaf noren-leaf--center" id="leaf-center">
+            <p class="noren-title">のれん</p>
+            <div class="noren-leaf-upper" id="leaf-center-upper">
+              <span class="noren-pattern noren-pattern--seamA-right"></span>
+              <span class="noren-pattern noren-pattern--seamB-left"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-right2"></span>
+            </div>
+            <div class="noren-leaf-lower" id="leaf-center-lower">
+              <span class="noren-pattern noren-pattern--seamB-left-lower"></span>
+              <span class="noren-pattern noren-pattern--seamC-right"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamE-left"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-right"></span>
+            </div>
+          </div>
+
+          <div class="noren-leaf noren-leaf--right" id="leaf-right">
+            <div class="noren-leaf-upper" id="leaf-right-upper">
+              <span class="noren-pattern noren-pattern--seamB-right"></span>
+            </div>
+            <div class="noren-leaf-lower" id="leaf-right-lower">
+              <span class="noren-pattern noren-pattern--seamB-right-lower"></span>
+              <span class="noren-cloud-pattern noren-cloud-pattern--seamE-right"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="genre-footer" id="genre-footer">
+      <button class="btn btn-outline genre-login-btn" id="login-btn">ログイン</button>
+    </footer>
+
+  </div>
+
+    
+
+  <script src="./js/genre.js"></script>
+</body>
+
+</html>

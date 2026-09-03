@@ -1,0 +1,701 @@
+/* ============================================
+   home.css
+   ホーム画面（スワイプでカードを選ぶ画面）専用スタイル
+   配色は赤・金・白のトーン（参考画像イメージ）に統一。
+   ここで定義する --home-* 変数はこのページ限定のスコープで、
+   style.css 側の共通トークン（--color-ai など）には影響しない。
+   ============================================ */
+
+.app-shell {
+  --home-dark: #453625;
+  /* ヘッダー・カード見出し背景の濃いえんじ色 */
+  --home-gold-bg: #fbd990;
+  /* 花柄パターンの地色（フォールバック用） */
+  --home-tab-1: #4a86d8;
+  /* タブの上端ハイライト（青） */
+  --home-tab-2: #1f4fa0;
+  /* タブの下端（青） */
+  --home-footer-1: #c9995c;
+  /* カード内タイトル部のグラデーション上 */
+  --home-footer-2: #8a5a2a;
+  /* カード内タイトル部のグラデーション下 */
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--home-gold-bg);
+  overflow: hidden;
+}
+
+/* 小花柄パターンは疑似要素として背景だけ分離し、
+   opacity を掛けても中身のコンテンツには影響しないようにする。
+   ここの opacity の値を下げるほど背景が薄くなる。 */
+.app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../images/pattern-floral-gold.svg");
+  background-repeat: repeat;
+  background-size: 15px 15px;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- ヘッダー：ハンバーガー／検索アイコン ---- */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 17px;
+  background: var(--home-dark);
+  flex: 0 0 auto;
+  z-index: 2;
+}
+
+.top-bar .icon-btn {
+  background: none;
+  border: none;
+  color: #faf6ec;
+  font-size: 2.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar-actions .icon-btn {
+  font-size: 1.9rem;
+}
+
+.top-bar-actions img{
+  width: 45px;
+}
+/* ---- メインエリア ---- */
+.home-main {
+  flex: 0.65;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  padding: 55px 16px 16px;
+}
+
+/* ---- カードスタック ---- */
+.card-stack {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 5 / 7.6;
+  margin: 0 auto;
+}
+
+/* カードごとの「セット」＝タグ行＋カード本体。
+   1枚のカードに紐づく要素としてまとめて生成・破棄するため、
+   スワイプで消えたタグが後から戻ってくることはない。 */
+.swipe-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+
+  /* アニメーション用のカスタムプロパティ。
+     JS側はこの値を書き換えるだけで、実際の見た目の動きはCSSに任せる。 */
+  --drag-x: 0px;
+  --drag-y: 0px;
+  --drag-rot: 0deg;
+  --stack-y: 0px;
+  --stack-scale: 1;
+
+  /* 上端を基準に縮小させることで、上端は揃ったまま下側だけが
+     次のカードとしてはみ出して見えるようにする */
+  transform-origin: top center;
+
+  transform:
+    translate(var(--drag-x), calc(var(--drag-y) + var(--stack-y))) rotate(var(--drag-rot)) scale(var(--stack-scale));
+
+  /* ドラッグ終了後の「戻る/吹き飛ぶ」動きのイージング。
+     UIアニメーション担当の方はここの数値を調整すると質感が変わります。 */
+  transition: transform 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28),
+    opacity 0.35s ease;
+}
+
+/* ---- カード上部のタグ（カテゴリ／地域／時代）
+       カードごとに個別に持ち、カード本体と一緒に動く。
+       カード本体の真上にぴったり接するよう、隙間は作らない。 ---- */
+.swipe-card-tags {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 0 6px;
+}
+
+.home-tab-pill {
+  flex: 0 0 auto;
+  padding: 11px 20px;
+  border-radius: 14px 14px 0 0;
+  /* --tab-color-1/2 は右スワイプ中にJSが書き換える（未設定時は通常の青にフォールバック） */
+  background: linear-gradient(180deg, var(--tab-color-1, var(--home-tab-1)) 0%, var(--tab-color-2, var(--home-tab-2)) 100%);
+  color: #fff8ee;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  /* 内側のハイライトに加えて外側にも影を落とし、後ろに重なるカードのタグと
+     区別しやすいよう手前に浮き上がって見えるようにする */
+  box-shadow: 0 -2px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 8px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* 奥に控えているカードのタグは、一番上のタグの視認性を妨げないよう
+   カード本体よりもさらに薄く表示する（アニメーションや形はそのまま） */
+.swipe-card.is-stacked .swipe-card-tags {
+  opacity: 0.4;
+}
+
+/* ---- カード本体（写真＋タイトル）。角丸・影・クリップはここに持たせる ---- */
+.swipe-card-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 4px 14px 14px 14px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* 奥に控えているカードは、伝統品名部分（.swipe-card-footer）の背景色を
+   透明度50%にした影を落とす */
+.swipe-card.is-stacked .swipe-card-body {
+  box-shadow: 0 14px 26px -8px rgba(138, 90, 42, 0.5);
+}
+
+/* ドラッグ中はトランジションを切って、指の動きに即座に追従させる */
+.swipe-card.is-dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+/* 奥に控えているカード（操作不可）はドラッグと別のトランジション速度に */
+.swipe-card.is-stacked {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* 右（気になる）方向へ吹き飛ぶ */
+.swipe-card.fly-right {
+  --drag-x: 700px;
+  --drag-y: -40px;
+  --drag-rot: 28deg;
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97), opacity 0.5s ease;
+}
+
+/* 左（スキップ）方向へ吹き飛ぶ */
+.swipe-card.fly-left {
+  --drag-x: -700px;
+  --drag-y: -40px;
+  --drag-rot: -28deg;
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97), opacity 0.5s ease;
+}
+
+/* ---- カード内：写真エリア ---- */
+.swipe-card-image {
+  flex: 1 1 auto;
+  height: 66%;
+  background-size: cover;
+  background-position: center;
+}
+
+/* 実写画像が入るまでのプレースホルダー用パレット（本来は card.image を背景に敷く） */
+.swipe-card-image--1 {
+  background: linear-gradient(160deg, #3d1c17 0%, #7a3b2c 100%);
+}
+
+.swipe-card-image--2 {
+  background: linear-gradient(160deg, #eef2f5 0%, #c7d6de 100%);
+}
+
+.swipe-card-image--3 {
+  background: linear-gradient(160deg, #c1440e 0%, #7a2a0a 100%);
+}
+
+.swipe-card-image--4 {
+  background: linear-gradient(160deg, #2c5b82 0%, #16324f 100%);
+}
+
+.swipe-card-image--5 {
+  background: linear-gradient(160deg, #4a2e1a 0%, #7a4a24 100%);
+}
+
+/* ---- カード内：金グラデーションのタイトル／説明エリア ---- */
+.swipe-card-footer {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 16px 18px 20px;
+  background: linear-gradient(160deg, var(--home-footer-1) 0%, var(--home-footer-2) 100%);
+}
+
+.swipe-card-title {
+  font-family: "Zen Kaku Gothic Antique" !important;
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: #fff8ee;
+  margin: 0 0 6px;
+}
+
+.swipe-card-teaser {
+  color: rgba(255, 248, 238, 0.92);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---- スワイプ中に画面端を色付けするフィードバックオーバーレイ ----
+   右にスワイプ＝保存（赤）
+   左にスワイプ＝スキップ（青）
+   ドラッグ量に応じて JS が opacity を 0〜1 で更新する。
+   z-index はカードスタックより高くして、常にカードより前面に表示する。
+   模様はご提供いただいた画像と同じ「六角形の柱」柄をSVGタイルで再現している
+   （images/pattern-hexagon-red.svg / pattern-hexagon-blue.svg）。 */
+.swipe-feedback-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-repeat: repeat;
+  background-size: 34px 34px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 0.15s linear;
+}
+
+.swipe-feedback-overlay--like {
+  right: 0;
+  background-image: url("../images/swipe_red.png");
+  background-size: 150px 100px;
+  /* 画面端（右）ほどはっきり、中央に近づくほど透明にフェードさせる */
+  -webkit-mask-image: linear-gradient(to left, #000 0%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: 25px;
+}
+
+.swipe-feedback-overlay--skip {
+  left: 0;
+  background-image: url("../images/swipe_blue.png");
+  background-size: 100px 100px;
+  /* 画面端（左）ほどはっきり、中央に近づくほど透明にフェードさせる */
+  -webkit-mask-image: linear-gradient(to right, #000 0%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 10px;
+  
+}
+.swipe-image--skip{
+  padding-left: 30px;
+  width: 100px;
+  transform: scaleX(-1);
+}
+
+.swipe-image--like{
+  width: 80px;
+}
+.swipe-feedback-label {
+  font-family: "Zen Kaku Gothic Antique" !important;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #fff8ee;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  padding: 10px 8px;
+}
+
+/* ---- 操作ボタン ---- */
+.home-main .swipe-actions {
+  width: 100%;
+  max-width: 380px;
+}
+
+.swipe-btn {
+  min-width: 115px;
+  height: 100px;
+  font-size: 2rem;
+  z-index: 2;
+}
+
+.swipe-btn-card {
+  min-width: 115px;
+  height: 55px;
+  font-size: 1.4rem;
+}
+
+/* このページに限り、アウトラインボタンを赤金トーンに合わせる */
+.app-shell .btn-outline {
+  border-color: var(--home-dark);
+  color: var(--home-dark);
+}
+
+.app-shell .btn-outline:hover:not(:disabled) {
+  background: rgba(61, 28, 23, 0.06);
+}
+
+/* ---- 下部ナビゲーション ---- */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--color-line);
+  flex: 0 0 auto;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.68rem;
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: "Zen Kaku Gothic Antique" !important;
+}
+
+.nav-item.active {
+  color: var(--color-shu);
+  font-weight: 700;
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* ---- カードが尽きた時の空表示
+       白背景ではなく、周囲（app-shellの金グラデーション）にとけこませ、
+       文字も大きくして視認しやすくする ---- */
+.card-stack .empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--home-dark);
+  padding: 24px;
+}
+
+/* ---- お気に入り画面 ---- */
+.favorites-title {
+  color: #faf6ec;
+  font-family: "Zen Kaku Gothic Antique" !important;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.favorites-header-spacer {
+  visibility: hidden;
+}
+
+.favorites-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+.favorites-empty {
+  text-align: center;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--home-dark);
+  margin: 0;
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）専用スタイル
+   ※スマホサイズ（iPhone等）で常に正しく動作するよう設定
+   ======================================================== */
+
+/* メニュー本体：初期状態は画面の左外（-100%）に強制的に隠す */
+.drawer-menu {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  height: 100vh !important;
+  background-color: #5E2727 !important;
+  /* アプリ共通の薄い紙色 */
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
+
+  /* カードスタックやポップアップよりも絶対に手前に配置 */
+  z-index: 999999 !important;
+
+  transform: translateX(-100%) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 🔵 JSで「is-open」クラスがついたら左から引き出す */
+.drawer-menu.is-open {
+  transform: translateX(0) !important;
+}
+
+/* 背景の黒幕（オーバーレイ） */
+.menu-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background-color: rgba(0, 0, 0, 0.904) !important;
+  z-index: 999998 !important;
+  /* メニューのすぐ後ろ、その他アプリ要素より手前 */
+
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.3s ease !important;
+}
+
+/* 🔵 JSで「is-visible」クラスがついたら黒幕を表示する */
+.menu-overlay.is-visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* ---- デザイン・見栄えの調整（アプリのえんじ色・フォントに統一） ---- */
+.drawer-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 20px 16px !important;
+  color: #faf6ec !important;
+}
+
+
+.close-btn {
+  background: none !important;
+  border: none !important;
+  color: #faf6ec !important;
+  font-size: 1.4rem !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+}
+
+.drawer-nav-list {
+  list-style: none !important;
+  padding: 12px 0 !important;
+  margin: 0 !important;
+}
+
+.drawer-nav-list li {
+  display: flex;
+  margin: 5% 1%;
+}
+
+.drawer-nav-list img {
+  width: 14%;
+  margin: 10px;
+  object-fit: contain;
+}
+
+.drawer-nav-list-bottom {
+  list-style: none !important;
+  padding: 12px 10px !important;
+  margin: 0 !important;
+  position: fixed;
+  bottom: 0 !important;
+}
+
+.drawer-nav-item {
+  display: block !important;
+  padding: 16px 10px !important;
+  color: #fbf7f7 !important;
+  /* 文字色（墨色） */
+  text-decoration: none !important;
+  font-family: "Zen Kaku Gothic Antique", sans-serif !important;
+  font-size: 1.3rem !important;
+  transition: background-color 0.2s ease !important;
+}
+.drawer-nav-item span{
+  padding-left: 10px;
+}
+
+.drawer-nav-item img{
+  position: relative;
+  width: 15%;
+  bottom: -8px;
+}
+
+
+
+
+.drawer-nav-item:hover {
+  background-color: #f1e9d8 !important;
+}
+
+
+/* ============================================
+   ＋α：タブレット／PCサイズ
+   ベースはスマホ想定。広い画面ではカードとフレームを少し拡大し、
+   アプリらしさを保つため中央に据え置く。
+   ============================================ */
+@media (min-width: 700px) {
+  body {
+    background: var(--home-dark, #2b1a14);
+  }
+
+  .app-shell {
+    max-width: 420px;
+    min-height: 92vh;
+    margin: 4vh auto;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.45);
+  }
+
+  .card-stack {
+    max-width: 330px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    max-width: 460px;
+  }
+
+  .card-stack {
+    max-width: 365px;
+  }
+
+  /* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）強制表示用スタイル
+   ======================================================== */
+
+  /* メニュー本体：画面の一番手前に強制配置 */
+  .drawer-menu {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    background-color: #faf6ec !important;
+    /* 薄い紙色 */
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3) !important;
+
+    /* 最前面（カードやモーダルよりも上）に持ってくる */
+    z-index: 999999 !important;
+
+    /* 初期状態は左側に完全に隠す */
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  /* 🔵 JSで「is-open」クラスがついたら左から引っ張り出す */
+  .drawer-menu.is-open {
+    transform: translateX(0) !important;
+  }
+
+  /* 背景の黒幕 */
+  .menu-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+
+    /* メニューのすぐ下に配置 */
+    z-index: 999998 !important;
+
+    /* 初期状態は非表示（クリックもできない状態） */
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease !important;
+  }
+
+  /* 🔵 JSで「is-visible」クラスがついたら黒幕を表示する */
+  .menu-overlay.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* ---- メニュー内の見栄え調整（アプリの「えんじ色」に統一） ---- */
+  .drawer-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 20px 16px !important;
+    background-color: #3d1c17 !important;
+    /* home.cssの--home-darkと同じ色 */
+    color: #faf6ec !important;
+  }
+
+  .drawer-title {
+    font-family: "Zen Kaku Gothic Antique", serif !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+  }
+
+  .close-btn {
+    background: none !important;
+    border: none !important;
+    color: #faf6ec !important;
+    font-size: 1.4rem !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+  }
+
+  .drawer-nav-list {
+    list-style: none !important;
+    padding: 12px 0 !important;
+    margin: 0 !important;
+  }
+
+  .drawer-nav-item {
+    display: block !important;
+    padding: 16px 20px !important;
+    color: #2b2420 !important;
+    text-decoration: none !important;
+    font-family: "Zen Kaku Gothic Antique", sans-serif !important;
+    font-size: 0.95rem !important;
+    border-bottom: 1px solid #ddd0b5 !important;
+    transition: background-color 0.2s ease !important;
+  }
+
+  .drawer-nav-item:hover {
+    background-color: #f1e9d8 !important;
+  }
+
+  .drawer-nav-item.active {
+    color: #c1440e !important;
+    /* 朱色 */
+    font-weight: 700 !important;
+    background-color: rgba(193, 68, 14, 0.05) !important;
+  }
+}
