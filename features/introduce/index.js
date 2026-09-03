@@ -16,6 +16,7 @@
 //   GET    /api/introduce/user/next         カードを1枚             未ログインOK
 //   POST   /api/introduce/user/:id/like     いいねトグル            ← requireAuth
 //   GET    /api/introduce/user/:id          記事詳細                未ログインOK
+//   GET    /dev/introduce                   compose動作確認用の画面（成果物ではない）
 //
 // 【重要】静的パス（/compose, /mine, /postal, /geocode, /reverse, /liked, /next）は
 // :id より先に登録する。後から足す /name-kana /name-suggestions も
@@ -30,6 +31,7 @@ import { readSessionCookie, userBySessionToken } from "../auth/session.js";
 import { QUESTIONS } from "./prompt.js";
 import { composeCard } from "./compose.js";
 import { fetchPostal, fetchGeocode, fetchReverse } from "./address.js";
+import { renderPage } from "./ui.js";
 import { embed, EMBED_MODEL } from "../search/embed.js";
 import { saveEmbedding, buildEmbeddingText } from "../search/db.js";
 import {
@@ -83,6 +85,11 @@ async function requireArtisan(c, next) {
   c.set("user", user);
   await next();
 }
+
+// --- 検証用の画面 -----------------------------------------------
+// これは成果物ではない。features/search/ui.js と同じ位置づけ。
+// /artisan, /user はフロントエンド担当のために空けてあるので占有しない。
+app.get("/dev/introduce", (c) => c.html(renderPage(QUESTIONS)));
 
 app.use("/api/introduce/artisan/*", requireArtisan);
 
