@@ -29,8 +29,7 @@ AI         Cloudflare Workers AI（埋め込み生成）
 ```
 features/search/AGENTS.md      検索
 features/introduce/AGENTS.md   紹介（カード作成・マッチング・記事）
-features/register/AGENTS.md    ユーザー登録
-features/auth/AGENTS.md        ログイン
+features/auth/AGENTS.md        ログイン・ユーザー登録
 frontend/AGENTS.md             画面
 ```
 
@@ -44,8 +43,7 @@ frontend/AGENTS.md             画面
 |---|---|
 | `features/search/` | 検索 |
 | `features/introduce/` | 紹介（カード作成・マッチング・記事） |
-| `features/register/` | ユーザー登録 |
-| `features/auth/` | ログイン |
+| `features/auth/` | ログイン・ユーザー登録 |
 | `frontend/` | 画面（見た目） |
 | `public/` | CSS・画像素材 |
 
