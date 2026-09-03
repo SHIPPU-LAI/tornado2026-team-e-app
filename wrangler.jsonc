@@ -1,8 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
 
-  // 【未決】Worker 名は仮。チームで決まったら差し替える。
-  "name": "teame-app",
+  // プロダクト名の投票で確定（2026-09-03）。
+  "name": "noren",
 
   "main": "src/index.js",
   "compatibility_date": "2026-08-01",
