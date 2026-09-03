@@ -53,10 +53,10 @@ app.get("/api/search/cards", async (c) => {
 });
 
 app.get("/api/search", async (c) => {
-  const { q = "", block = "", prefecture = "", tag = "", name = "" } = c.req.query();
+  const { q = "", block = "", prefecture = "", tag = "", name = "", lang = "" } = c.req.query();
   const t0 = Date.now();
   try {
-    const r = await search({ DB: db(c), AI: c.env.AI }, { q, block, prefecture, tag, name });
+    const r = await search({ DB: db(c), AI: c.env.AI }, { q, block, prefecture, tag, name, lang });
     return c.json({ query: q, ...r, total: r.items.length, ms: Date.now() - t0 });
   } catch (e) {
     console.error("[search]", e);

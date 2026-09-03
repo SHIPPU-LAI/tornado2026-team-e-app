@@ -120,7 +120,18 @@ app.post("/api/introduce/artisan/compose", async (c) => {
 });
 
 app.get("/api/introduce/artisan/mine", async (c) => {
+  const lang = c.req.query("lang") || "ja";
   const items = await listMineCards(db(c), c.get("user").id);
+  // buildCardView と同じ挙動（英訳があれば差し替え、無ければ日本語のまま）。
+  if (lang === "en") {
+    await Promise.all(
+      items.map(async (card) => {
+        const i18n = await getCardI18n(db(c), card.id, "en");
+        if (i18n?.name) card.name = i18n.name;
+        if (i18n?.description) card.description = i18n.description;
+      }),
+    );
+  }
   return c.json({ items, total: items.length });
 });
 

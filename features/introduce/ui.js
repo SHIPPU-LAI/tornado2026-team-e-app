@@ -63,7 +63,9 @@ export function renderPage(questions) {
   <div class="status" id="gate-status"></div>
 
   <section class="box" id="mine-box" hidden>
-    <h2 style="margin-top:0;border-top:0;padding-top:0">自分のカード</h2>
+    <h2 style="margin-top:0;border-top:0;padding-top:0">自分のカード
+      <button type="button" id="mine-lang-toggle" class="ghost" style="margin:0 0 0 .5rem;padding:.15rem .6rem;font-size:.75rem">English</button>
+    </h2>
     <ul class="plain" id="mine-list"></ul>
     <div class="status" id="mine-status"></div>
   </section>
@@ -291,16 +293,19 @@ function fmtDate(ms) {
   return p(d.getMonth() + 1) + "/" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
 }
 
+let mineLang = "ja";
+
 async function loadMine() {
   try {
-    const data = await api("/api/introduce/artisan/mine");
+    const data = await api("/api/introduce/artisan/mine?lang=" + mineLang);
     mineCards = data.items || [];
     $("mine-list").innerHTML = mineCards.length
       ? mineCards.map((c) =>
-          "<li>" + esc(c.name) +
+          "<li><b>" + esc(c.name) + "</b>" +
           ' <span class="muted">更新 ' + fmtDate(c.updated_at) + "</span> " +
           '<button type="button" class="ghost edit-btn" data-id="' + esc(c.id) + '">修正</button> ' +
-          '<button type="button" class="ghost delete-btn" data-id="' + esc(c.id) + '">削除</button></li>'
+          '<button type="button" class="ghost delete-btn" data-id="' + esc(c.id) + '">削除</button>' +
+          '<div class="muted">' + esc((c.description || "").slice(0, 60)) + "</div></li>"
         ).join("")
       : '<li class="muted">まだカードがありません</li>';
     setStatus("mine-status", "");
@@ -564,6 +569,11 @@ function boot() {
   });
   $("register").addEventListener("click", doRegister);
   $("cancel-edit").addEventListener("click", resetForm);
+  $("mine-lang-toggle").addEventListener("click", () => {
+    mineLang = mineLang === "en" ? "ja" : "en";
+    $("mine-lang-toggle").textContent = mineLang === "en" ? "日本語" : "English";
+    loadMine();
+  });
   $("mine-list").addEventListener("click", (e) => {
     const editBtn = e.target.closest(".edit-btn");
     if (editBtn) { startEdit(editBtn.dataset.id); return; }

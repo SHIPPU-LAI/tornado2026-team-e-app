@@ -98,7 +98,8 @@ export function renderPage() {
       <select id="block"><option value="">地方：すべて</option></select>
       <select id="prefecture"><option value="">都道府県：すべて</option></select>
       <span style="font-size:.85rem;color:var(--muted)" id="hit"></span>
-      <button id="reindex" class="ghost" style="margin-left:auto;font-size:.78rem;padding:.3rem .7rem">再インデックス</button>
+      <button id="lang-toggle" class="ghost" style="margin-left:auto;font-size:.78rem;padding:.3rem .7rem">English</button>
+      <button id="reindex" class="ghost" style="font-size:.78rem;padding:.3rem .7rem">再インデックス</button>
     </div>
     <details class="tagbox">
       <summary>タグで絞り込む <span id="tagcount"></span></summary>
@@ -151,7 +152,7 @@ const safeUrl = (u) => {
   } catch { return ""; }
 };
 
-let state = { q:"", block:"", prefecture:"", tag:"" };
+let state = { q:"", block:"", prefecture:"", tag:"", lang:"" };
 let PREF_BY_BLOCK = {};
 let map, markers = [];
 
@@ -289,6 +290,7 @@ async function run() {
   if (state.block) p.set("block", state.block);
   if (state.prefecture) p.set("prefecture", state.prefecture);
   if (state.tag) p.set("tag", state.tag);
+  if (state.lang) p.set("lang", state.lang);
 
   $("go").disabled = true;
   try {
@@ -370,6 +372,11 @@ async function boot() {
     if (!card || e.target.tagName === "A") return;
     const lat = parseFloat(card.dataset.lat), lng = parseFloat(card.dataset.lng);
     if (!isNaN(lat) && !isNaN(lng)) focusMap(lat, lng);
+  });
+  $("lang-toggle").addEventListener("click", () => {
+    state.lang = state.lang === "en" ? "" : "en";
+    $("lang-toggle").textContent = state.lang === "en" ? "日本語" : "English";
+    run();
   });
   $("reindex").addEventListener("click", async () => {
     $("reindex").disabled = true;

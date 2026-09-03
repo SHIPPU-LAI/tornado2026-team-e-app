@@ -6,7 +6,7 @@
 //
 // 外部のLLM APIは検索経路に一切登場しない。
 
-import { keywordCards, cardsByTags, cardsWithEmbedding, loadSynonyms } from "./db.js";
+import { keywordCards, cardsByTags, cardsWithEmbedding, loadSynonyms, getEnglishI18n } from "./db.js";
 import { expand, SYNONYMS } from "./synonyms.js";
 import { embed, cosine } from "./embed.js";
 
@@ -20,9 +20,31 @@ const VECTOR_REL_WINDOW = 0.06; // 最高スコアからこの差以内を残す
 const VECTOR_FLOOR = 0.35; // これ未満は何にも近くないので捨てる（相対窓だけだと無関係でも1件は返ってしまうため）
 const VECTOR_LIMIT = 5; // 最大件数
 
+// 結果のカードに card_i18n(lang='en') があれば name/description を差し替える。
+// その場で翻訳はしない（設計書5章）。無ければ日本語のまま返す（フォールバック）。
+// features/introduce/index.js の buildCardView と同じ挙動に揃える。
+async function applyLang(db, result, lang) {
+  if (lang !== "en" || result.items.length === 0) return result;
+  result.items = await Promise.all(
+    result.items.map(async (item) => {
+      const i18n = await getEnglishI18n(db, item.card.id);
+      if (!i18n) return item;
+      return {
+        ...item,
+        card: {
+          ...item.card,
+          name: i18n.name || item.card.name,
+          description: i18n.description || item.card.description,
+        },
+      };
+    }),
+  );
+  return result;
+}
+
 export async function search(
   env,
-  { q = "", block = "", prefecture = "", tag = "", name = "" } = {},
+  { q = "", block = "", prefecture = "", tag = "", name = "", lang = "" } = {},
 ) {
   const db = env.DB;
   const filters = { block, prefecture, tag, name };
@@ -31,7 +53,7 @@ export async function search(
   // --- 段1: キーワード一致 ---------------------------------
   const hits = await keywordCards(db, query, filters);
   if (hits.length > 0 || !query) {
-    return { stage: "keyword", items: hits.map((card) => ({ card })), meta: {} };
+    return applyLang(db, { stage: "keyword", items: hits.map((card) => ({ card })), meta: {} }, lang);
   }
 
   // --- 段2: シノニム展開 -----------------------------------
@@ -47,11 +69,11 @@ export async function search(
   if (tags.length > 0) {
     const byTag = await cardsByTags(db, tags, filters);
     if (byTag.length > 0) {
-      return {
+      return applyLang(db, {
         stage: "synonym",
         items: byTag.map((card) => ({ card })),
         meta: { expanded: tags },
-      };
+      }, lang);
     }
   }
 
@@ -91,7 +113,7 @@ export async function search(
           .slice(0, VECTOR_LIMIT)
       : [];
 
-  return {
+  return applyLang(db, {
     stage: "vector",
     items: scored.map((x) => ({
       card: x.card,
@@ -103,5 +125,5 @@ export async function search(
       rel_window: VECTOR_REL_WINDOW,
       floor: VECTOR_FLOOR,
     },
-  };
+  }, lang);
 }

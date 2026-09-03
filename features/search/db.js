@@ -159,7 +159,8 @@ export async function cardsMissingEmbedding(db) {
 }
 
 // card_i18n は紹介機能の所有テーブル。ここでは読むだけ（cards を読むのと同じ扱い）。
-async function getEnglishI18n(db, cardId) {
+// 検索結果の?lang=en（search.js）とbuildEmbeddingTextの両方から使う。
+export async function getEnglishI18n(db, cardId) {
   const row = await db
     .prepare("select name, description from card_i18n where card_id = ? and lang = 'en'")
     .bind(cardId)
