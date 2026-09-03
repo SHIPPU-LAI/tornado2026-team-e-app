@@ -154,13 +154,29 @@ export async function getCardPublic(db, id) {
 }
 
 // 品単位のカードをランダムに1件返す（伝統名でグループ化しない。設計書3-2）。
-// swipes を持たないので既読管理はしない。同じカードが連続で出ることがある
-// （既知の割り切り。除外ロジックは足さない）。
-export async function getRandomCard(db) {
-  const row = await db
-    .prepare(`select ${CARD_COLS} from cards order by random() limit 1`)
-    .first();
-  return shapeCard(row);
+// swipes を持たないのでサーバー側に既読状態は持たせない。フロントが見たIDを
+// excludeIds として渡す形にする。
+//
+// 【重要】D1 は1クエリのバインドパラメータ上限が100。`where id not in (?,?,...)`
+// で組むと excludeIds が101件を超えた瞬間に本番だけ落ちる（AGENTS.md の
+// 実測済みの罠）。ここでは in(...) を使わず、全件読んでJS側で除外する
+// （features/search/db.js の cardsWithEmbedding と同じ考え方）。
+//
+// 除外した結果が0件になったら、除外を無視して全件から返す
+// （「もう無い」で止まるより、一周して戻るほうがデモで自然なため）。
+export async function getRandomCard(db, excludeIds = []) {
+  const { results } = await db.prepare(`select ${CARD_COLS} from cards`).all();
+  if (results.length === 0) return null;
+
+  let candidates = results;
+  if (excludeIds.length > 0) {
+    const excludeSet = new Set(excludeIds);
+    const filtered = results.filter((r) => !excludeSet.has(r.id));
+    if (filtered.length > 0) candidates = filtered;
+  }
+
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+  return shapeCard(picked);
 }
 
 export async function countLikes(db, cardId) {

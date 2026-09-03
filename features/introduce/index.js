@@ -409,12 +409,24 @@ app.get("/api/introduce/user/liked", async (c) => {
 });
 
 // 品単位のカードをランダムに1枚返す（伝統名でグループ化しない。設計書3-2）。
-// 既読管理は持たないので同じカードが連続で出ることがある（既知の割り切り）。
+// サーバーは既読状態を持たない。フロントが見たIDを ?exclude=id1,id2,... で
+// 送る。除外しても0件になったら無視して全件から返す（getRandomCard参照）。
 // カードが0件のときは 404 ではなく card:null を返す（フロントが「もう無い」を表示できるように）。
+//
+// exclude は1回のリクエストにつきこの件数まで見る。それ以上は先頭だけ使う。
+// D1側の上限（100バインド）とは無関係（in(...)を使わずJS側で除外するため）だが、
+// URLとレスポンスが際限なく肥大化しないよう上限を決めた。
+const EXCLUDE_LIMIT = 500;
+
 app.get("/api/introduce/user/next", async (c) => {
   const lang = c.req.query("lang") || "ja";
+  const excludeIds = (c.req.query("exclude") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, EXCLUDE_LIMIT);
   const user = await optionalUser(c);
-  const card = await getRandomCard(db(c));
+  const card = await getRandomCard(db(c), excludeIds);
   if (!card) return c.json({ card: null });
   const view = await buildCardView(db(c), card, user ? user.id : null, lang);
   return c.json({ card: view });
