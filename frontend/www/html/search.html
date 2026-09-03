@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>お気に入り | 伝統工芸マッチング</title>
+    <title>検索 | 伝統工芸マッチング</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -12,55 +12,62 @@
         rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/card-modal.css">
-    <link rel="stylesheet" href="../css/favorites.css">
+    <link rel="stylesheet" href="../css/search.css">
 </head>
 
 <body>
 
-    <div class="fav-shell" id="fav-shell">
+    <div class="search-shell" id="search-shell">
 
         <header class="top-bar">
             <button id="openMenuBtn" class="icon-btn" aria-label="メニュー">☰</button>
-            <a href="../html/search.html" class="icon-btn" aria-label="検索">
-                <img src="../images/search_icon.png" alt="">
+            <a href="../html/home.html" class="top-bar-home-link">
+                <span>← ホームへ</span>
             </a>
         </header>
 
-        <div class="fav-hero">
-            <span class="fav-hero-cloud fav-hero-cloud--tr"></span>
-            <span class="fav-hero-cloud fav-hero-cloud--bm"></span>
-            <span class="fav-hero-cloud fav-hero-cloud--bm2"></span>
-            <h1 class="fav-hero-title">お気に入り</h1>
-        </div>
+        <section class="search-hero">
+            <h1>工芸品をさがす</h1>
+            <form class="search-form" id="search-form">
+                <label class="visually-hidden" for="search-input">検索キーワード</label>
+                <input type="search" id="search-input" class="search-input"
+                    placeholder="工芸品名・職人名・地域などで検索" autocomplete="off">
+                <button type="submit" class="btn btn-primary search-submit-btn">検索</button>
+            </form>
+            <button type="button" class="search-clear-btn" id="search-clear-btn">条件をクリア</button>
+        </section>
 
-        <main class="fav-main" id="fav-main">
-            <!-- JSがここにタグごとのセクションを生成します -->
-        </main>
+        <div class="search-body-columns">
+            <section class="search-filters" id="search-filters">
+                <div class="search-filter-group">
+                    <h2 class="search-filter-title">地方で絞り込む</h2>
+                    <div class="search-chip-row" id="block-chip-row"></div>
+                </div>
+                <div class="search-filter-group">
+                    <h2 class="search-filter-title">都道府県で絞り込む</h2>
+                    <div class="search-chip-row" id="prefecture-chip-row"></div>
+                </div>
+                <div class="search-filter-group">
+                    <h2 class="search-filter-title">タグで絞り込む</h2>
+                    <div class="search-chip-row" id="tag-chip-row"></div>
+                </div>
+            </section>
 
-        <div class="fav-add-wrap">
-            <button class="fav-add-btn" id="fav-add-btn" aria-label="タグを追加">＋</button>
+            <section class="search-results" id="search-results-section">
+                <p class="search-result-count" id="search-result-count"></p>
+                <div class="search-result-list" id="search-result-list"></div>
+            </section>
         </div>
 
     </div>
 
-    <!-- タグ選択シート -->
-    <div class="fav-tagsheet-overlay" id="fav-tagsheet-overlay">
-        <div class="fav-tagsheet" role="dialog" aria-modal="true">
-            <div class="fav-tagsheet-header">
-                <h2>表示するタグを選ぶ</h2>
-                <button class="modal-icon-btn" id="fav-tagsheet-close" aria-label="閉じる">✕</button>
-            </div>
-            <ul class="fav-tagsheet-list" id="fav-tagsheet-list"></ul>
-        </div>
-    </div>
-
-    <!-- 作品詳細ポップアップ -->
+    <!-- 作品詳細ポップアップ（検索結果用：スワイプ操作ボタンは無し） -->
     <div class="detail-modal-overlay" id="detail-modal-overlay">
         <div class="detail-modal" role="dialog" aria-modal="true">
 
             <div class="detail-modal-header">
                 <button class="modal-icon-btn" id="modal-close-btn" aria-label="閉じる">✕</button>
-                <button class="modal-icon-btn heart-btn liked" id="modal-heart-btn" aria-label="お気に入り">♥</button>
+                <button class="modal-icon-btn heart-btn" id="modal-heart-btn" aria-label="お気に入り">♥</button>
             </div>
 
             <div class="detail-modal-scroll">
@@ -109,6 +116,7 @@
         <div class="drawer-header">
             <button class="close-btn" id="closeMenuBtn">✕</button>
         </div>
+
         <!-- ログイン状態に応じてJS（auth-demo.js）がここを書き換える -->
         <ul class="drawer-nav-list" id="drawerNavList"></ul>
 
@@ -163,7 +171,7 @@
     <script src="../js/font-size.js"></script>
     <script src="../js/language.js"></script>
     <script src="../js/auth-demo.js"></script>
-    <script src="../js/favorites.js"></script>
+    <script src="../js/search.js"></script>
 </body>
 
 </html>
