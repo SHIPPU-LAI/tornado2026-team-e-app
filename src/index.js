@@ -7,7 +7,6 @@ import { Hono } from "hono";
 
 import search from "../features/search/index.js";
 import introduce from "../features/introduce/index.js";
-import register from "../features/register/index.js";
 import auth from "../features/auth/index.js";
 
 const app = new Hono();
@@ -34,14 +33,6 @@ const FEATURES = [
     pageNote: "検証用",
     api: "/api/introduce",
     note: "カード作成（5問→AI）・編集・表示・いいね・画像・住所",
-  },
-  {
-    dir: "features/register/",
-    label: "ユーザー登録",
-    status: "stub",
-    page: "/register",
-    api: "/api/register",
-    note: "使っていない。登録は features/auth/ に統合した。担当者が戻ってきたときのために枠だけ残してある",
   },
   {
     dir: "features/auth/",
@@ -146,7 +137,6 @@ app.get("/", (c) => {
 
 app.route("/", search);
 app.route("/", introduce);
-app.route("/", register);
 app.route("/", auth);
 
 app.notFound((c) =>
