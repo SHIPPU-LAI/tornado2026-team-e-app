@@ -24,14 +24,16 @@ const FEATURES = [
     page: "/dev/search",
     pageNote: "検証用",
     api: "/api/search",
+    note: "段1 キーワード → 段2 シノニム → 段3 ベクトル。英語のクエリも一部通る",
   },
   {
     dir: "features/introduce/",
-    label: "紹介（カード作成・マッチング・記事）",
-    status: "stub",
-    page: "/user",
+    label: "紹介（カード作成・表示・いいね）",
+    status: "ready",
+    page: "/dev/introduce",
+    pageNote: "検証用",
     api: "/api/introduce",
-    note: "実装は別リポジトリにある。持ち込み待ち",
+    note: "カード作成（5問→AI）・編集・表示・いいね・画像・住所",
   },
   {
     dir: "features/register/",
@@ -39,23 +41,24 @@ const FEATURES = [
     status: "stub",
     page: "/register",
     api: "/api/register",
-    note: "進捗・実装場所とも未確認",
+    note: "使っていない。登録は features/auth/ に統合した。担当者が戻ってきたときのために枠だけ残してある",
   },
   {
     dir: "features/auth/",
-    label: "ログイン",
-    status: "stub",
-    page: "/login",
+    label: "ログイン・ユーザー登録",
+    status: "ready",
+    page: "/dev/login",
+    pageNote: "検証用",
     api: "/api/auth",
-    note: "担当未定。着手されているかも不明",
+    note: "職人と一般のロールがある。パスワードは12文字以上",
   },
   {
     dir: "frontend/",
     label: "フロントエンド（画面）",
     status: "external",
-    page: "/ , /search , /user …",
+    page: "/ , /search , /user , /login , /artisan",
     api: "—",
-    note: "パスは空けてある。詳細は frontend/README.md",
+    note: "パスは空けてある（/ , /search , /user , /login , /artisan）。API仕様は docs/フロントエンド向けAPI.md",
   },
 ];
 
@@ -133,8 +136,9 @@ app.get("/", (c) => {
       <li><b>画面（見た目）はフロントエンドの担当です。</b>
           <code>/dev/*</code> はバックエンドの動作確認用で、成果物ではありません。
           本番の画面を置けるよう <code>/search</code> などのパスは空けてあります</li>
-      <li><b>未決事項は README.md にまとめてあります。</b>特に D1 のバインディング名が
-          紹介機能と食い違っているので、統合前に決める必要があります</li>
+      <li><b>本番はここで動いています</b>（デプロイ済み）</li>
+      <li>フロントエンド向けのAPI仕様は <code>docs/フロントエンド向けAPI.md</code> にあります</li>
+      <li>残りの未決事項は README.md にまとめてあります</li>
     </ul>
   </div>
 </main></body></html>`);
