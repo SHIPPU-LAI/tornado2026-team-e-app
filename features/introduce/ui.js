@@ -41,6 +41,15 @@ export function renderPage(questions) {
   ul.plain li { font-size:.85rem; padding:.2rem 0; }
   code { background:var(--accent-soft,#f4ece7); padding:.05rem .35rem; border-radius:4px; }
   .followup { background:#fff8ec; border:1px solid #e6d3a3; border-radius:8px; padding:.7rem; margin-top:.7rem; }
+  .tagbtns { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.3rem; }
+  .tagbtns button { margin-top:0; padding:.25rem .7rem; font-size:.8rem; border-radius:999px;
+    background:transparent; color:var(--muted); border:1px solid var(--line); }
+  .tagbtns button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tagchips { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.3rem; min-height:1.6rem; }
+  .tagchips .chip { display:inline-flex; align-items:center; gap:.3rem; background:var(--accent);
+    color:#fff; padding:.15rem .3rem .15rem .6rem; border-radius:999px; font-size:.8rem; }
+  .tagchips .chip button { margin:0; padding:0 .35rem; background:transparent; color:#fff;
+    border:0; font-size:.85rem; line-height:1; cursor:pointer; }
   .session { background:#fff; border:1px solid var(--line); border-radius:8px; padding:.6rem .8rem; margin-bottom:1rem; font-size:.85rem; }
   [hidden] { display:none !important; }
 </style>
@@ -68,8 +77,14 @@ export function renderPage(questions) {
     <p class="muted">架空のデータなら先頭に「（架空）」を付けてください。画面に架空と表示されます。</p>
     <label>ふりがな（任意）</label>
     <input type="text" id="name_kana" placeholder="例：わじまぬり">
-    <label>タグ（カンマ区切り。サーバー側で5個に切られます）</label>
-    <input type="text" id="tags" placeholder="例：漆器,食器,見学できる">
+    <label>タグ（最大5個。既存のタグから選ぶか、無ければ自由入力で作れます）</label>
+    <div class="tagchips" id="tag-chips"></div>
+    <div class="tagbtns" id="tag-buttons"></div>
+    <div class="row">
+      <input type="text" id="tag-new" placeholder="新しいタグを入力してEnter">
+      <button type="button" id="tag-add" class="ghost">追加</button>
+    </div>
+    <p class="muted" id="tag-note"></p>
     <label>HP URL（任意）</label>
     <input type="text" id="hp_url" placeholder="https://...">
     <div id="questions"></div>
@@ -149,6 +164,9 @@ let imageKeys = [];
 let loggedIn = false;
 let editingId = null;
 let mineCards = [];
+let allTags = [];
+let selectedTags = [];
+const MAX_TAGS = 5;
 
 function setStatus(id, msg, kind) {
   const el = $(id);
@@ -169,6 +187,57 @@ function renderQuestions() {
     '<label>Q' + (i + 1) + '. ' + esc(q) + '</label>' +
     '<input type="text" data-qidx="' + i + '" class="answer">'
   ).join("");
+}
+
+// --- タグ（既存のタグから選ぶ。無ければ自由入力で作れる） -----------
+
+// GET /api/search/facets が使うタグ一覧をそのまま借りる（新しいテーブルは作らない）。
+// 落ちても画面を壊さない。自由入力だけでタグを付けられる状態にする。
+async function loadFacetTags() {
+  try {
+    const data = await api("/api/search/facets");
+    allTags = data.tags || [];
+  } catch (e) {
+    allTags = [];
+    $("tag-note").textContent = "既存タグの読み込みに失敗しました（" + e.message + "）。自由入力でタグを追加できます。";
+  }
+  renderTagUI();
+}
+
+function renderTagUI() {
+  const atMax = selectedTags.length >= MAX_TAGS;
+
+  $("tag-buttons").innerHTML = allTags.map((t) => {
+    const on = selectedTags.includes(t);
+    const disabled = !on && atMax;
+    return '<button type="button" class="tag-btn' + (on ? " on" : "") + '"' +
+      (disabled ? " disabled" : "") + ' data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+  }).join("");
+
+  $("tag-chips").innerHTML = selectedTags.map((t) =>
+    '<span class="chip">' + esc(t) + '<button type="button" class="chip-remove" data-tag="' +
+      esc(t) + '">×</button></span>'
+  ).join("");
+
+  if (!$("tag-note").textContent.includes("失敗")) {
+    $("tag-note").textContent = atMax
+      ? "5個まで選べます。あと0個です。"
+      : "あと" + (MAX_TAGS - selectedTags.length) + "個まで選べます。";
+  }
+}
+
+function addTag(tag) {
+  const t = tag.trim();
+  if (!t) return;
+  if (selectedTags.includes(t)) return;
+  if (selectedTags.length >= MAX_TAGS) return;
+  selectedTags.push(t);
+  renderTagUI();
+}
+
+function removeTag(tag) {
+  selectedTags = selectedTags.filter((t) => t !== tag);
+  renderTagUI();
 }
 
 function showLoggedInUI() {
@@ -245,7 +314,9 @@ function resetForm() {
   $("name").value = "";
   $("artisan_name").value = "";
   $("name_kana").value = "";
-  $("tags").value = "";
+  selectedTags = [];
+  renderTagUI();
+  $("tag-new").value = "";
   $("hp_url").value = "";
   $("region").value = "";
   $("address").value = "";
@@ -275,7 +346,8 @@ async function startEdit(id) {
     $("name").value = c.name || "";
     $("artisan_name").value = c.artisan_name || "";
     $("name_kana").value = c.name_kana || "";
-    $("tags").value = (c.tags || []).join(",");
+    selectedTags = (c.tags || []).slice(0, MAX_TAGS);
+    renderTagUI();
     $("hp_url").value = c.hp_url || "";
     $("region").value = c.region || "";
     $("address").value = c.address || "";
@@ -409,7 +481,7 @@ async function doRegister() {
       artisan_name: $("artisan_name").value || undefined,
       name_kana: $("name_kana").value || undefined,
       hp_url: $("hp_url").value || undefined,
-      tags: $("tags").value.split(",").map((s) => s.trim()).filter(Boolean),
+      tags: selectedTags,
       region: $("region").value || undefined,
       address: $("address").value || undefined,
     };
@@ -455,6 +527,28 @@ async function doRegister() {
 function boot() {
   renderQuestions();
   checkSession();
+  loadFacetTags();
+  $("tag-buttons").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tag-btn");
+    if (!btn || btn.disabled) return;
+    if (selectedTags.includes(btn.dataset.tag)) removeTag(btn.dataset.tag);
+    else addTag(btn.dataset.tag);
+  });
+  $("tag-chips").addEventListener("click", (e) => {
+    const btn = e.target.closest(".chip-remove");
+    if (btn) removeTag(btn.dataset.tag);
+  });
+  $("tag-add").addEventListener("click", () => {
+    addTag($("tag-new").value);
+    $("tag-new").value = "";
+  });
+  $("tag-new").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag($("tag-new").value);
+      $("tag-new").value = "";
+    }
+  });
   $("compose").addEventListener("click", () => { collectFollowupIfAny(); doCompose(); });
   $("upload-image").addEventListener("click", doUploadImage);
   $("postal-go").addEventListener("click", doPostal);
