@@ -62,8 +62,14 @@ export function renderPage(questions) {
     <div class="status" id="login-status"></div>
   </section>
 
+  <section class="box" id="mine-box" hidden>
+    <h2 style="margin-top:0;border-top:0;padding-top:0">自分のカード</h2>
+    <ul class="plain" id="mine-list"></ul>
+    <div class="status" id="mine-status"></div>
+  </section>
+
   <section class="box" id="compose-box" hidden>
-    <h2 style="margin-top:0;border-top:0;padding-top:0">2. カードの中身をAIに作らせる</h2>
+    <h2 id="compose-heading" style="margin-top:0;border-top:0;padding-top:0">2. カードの中身をAIに作らせる</h2>
     <label>伝統名</label>
     <input type="text" id="name" placeholder="例：輪島塗">
     <label>職人名</label>
@@ -132,6 +138,7 @@ export function renderPage(questions) {
   <section class="box" id="register-box" hidden>
     <h2 style="margin-top:0;border-top:0;padding-top:0">5. 登録する</h2>
     <button id="register">登録する</button>
+    <button id="cancel-edit" class="ghost" hidden style="margin-left:.5rem">修正をやめる</button>
     <div class="status" id="register-status"></div>
     <div id="register-result" hidden>
       <p>作成したカードID: <code id="created-id"></code></p>
@@ -149,6 +156,8 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (m) =>
 let followups = [];
 let imageKeys = [];
 let loggedIn = false;
+let editingId = null;
+let mineCards = [];
 
 function setStatus(id, msg, kind) {
   const el = $(id);
@@ -171,6 +180,16 @@ function renderQuestions() {
   ).join("");
 }
 
+function showLoggedInUI() {
+  loggedIn = true;
+  $("mine-box").hidden = false;
+  $("compose-box").hidden = false;
+  $("images-box").hidden = false;
+  $("address-box").hidden = false;
+  $("register-box").hidden = false;
+  loadMine();
+}
+
 async function doLogin() {
   setStatus("login-status", "ログイン中…");
   try {
@@ -179,12 +198,8 @@ async function doLogin() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ email: $("email").value, password: $("password").value }),
     });
-    loggedIn = true;
     setStatus("login-status", "ログインしました", "ok");
-    $("compose-box").hidden = false;
-    $("images-box").hidden = false;
-    $("address-box").hidden = false;
-    $("register-box").hidden = false;
+    showLoggedInUI();
   } catch (e) {
     setStatus("login-status", e.message, "err");
   }
@@ -201,14 +216,99 @@ async function doSignup() {
         role: "artisan", display_name: "確認用工房",
       }),
     });
-    loggedIn = true;
     setStatus("login-status", "登録してログインしました", "ok");
-    $("compose-box").hidden = false;
-    $("images-box").hidden = false;
-    $("address-box").hidden = false;
-    $("register-box").hidden = false;
+    showLoggedInUI();
   } catch (e) {
     setStatus("login-status", e.message, "err");
+  }
+}
+
+// --- 自分のカード一覧・編集 -----------------------------------------
+
+function fmtDate(ms) {
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, "0");
+  return p(d.getMonth() + 1) + "/" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+
+async function loadMine() {
+  try {
+    const data = await api("/api/introduce/artisan/mine");
+    mineCards = data.items || [];
+    $("mine-list").innerHTML = mineCards.length
+      ? mineCards.map((c) =>
+          "<li>" + esc(c.name) +
+          ' <span class="muted">更新 ' + fmtDate(c.updated_at) + "</span> " +
+          '<button type="button" class="ghost edit-btn" data-id="' + esc(c.id) + '">修正</button> ' +
+          '<button type="button" class="ghost delete-btn" data-id="' + esc(c.id) + '">削除</button></li>'
+        ).join("")
+      : '<li class="muted">まだカードがありません</li>';
+    setStatus("mine-status", "");
+  } catch (e) {
+    setStatus("mine-status", e.message, "err");
+  }
+}
+
+function resetForm() {
+  editingId = null;
+  $("name").value = "";
+  $("artisan_name").value = "";
+  $("name_kana").value = "";
+  $("tags").value = "";
+  $("hp_url").value = "";
+  $("region").value = "";
+  $("address").value = "";
+  $("lat").value = "";
+  $("lng").value = "";
+  $("ja").value = "";
+  $("en").value = "";
+  $("result-box").hidden = true;
+  document.querySelectorAll(".answer").forEach((el) => (el.value = ""));
+  followups = [];
+  $("followup-box").hidden = true;
+  imageKeys = [];
+  $("image-list").innerHTML = "";
+  $("register-result").hidden = true;
+  $("compose-heading").textContent = "2. カードの中身をAIに作らせる";
+  $("register").textContent = "登録する";
+  $("cancel-edit").hidden = true;
+}
+
+async function startEdit(id) {
+  setStatus("mine-status", "読み込み中…");
+  try {
+    const data = await api("/api/introduce/artisan/" + encodeURIComponent(id));
+    const c = data.card;
+    resetForm();
+    editingId = id;
+    $("name").value = c.name || "";
+    $("artisan_name").value = c.artisan_name || "";
+    $("name_kana").value = c.name_kana || "";
+    $("tags").value = (c.tags || []).join(",");
+    $("hp_url").value = c.hp_url || "";
+    $("region").value = c.region || "";
+    $("address").value = c.address || "";
+    $("ja").value = c.description || "";
+    $("result-box").hidden = false;
+    // 編集時は5問・composeを必須にしない。既存の説明文を直接直して更新するだけでよい。
+    $("ai-flag").textContent = "既存の説明文を読み込みました。このまま直して更新できます（AIに作り直させることもできます）。";
+    $("compose-heading").textContent = "伝統を修正する";
+    $("register").textContent = "更新する";
+    $("cancel-edit").hidden = false;
+    setStatus("mine-status", "");
+  } catch (e) {
+    setStatus("mine-status", e.message, "err");
+  }
+}
+
+async function doDelete(id) {
+  if (!confirm("本当に削除しますか？")) return;
+  try {
+    await api("/api/introduce/artisan/" + encodeURIComponent(id), { method: "DELETE" });
+    if (editingId === id) resetForm();
+    await loadMine();
+  } catch (e) {
+    setStatus("mine-status", e.message, "err");
   }
 }
 
@@ -310,7 +410,8 @@ async function doGeocode() {
 }
 
 async function doRegister() {
-  setStatus("register-status", "登録しています…");
+  const isEdit = Boolean(editingId);
+  setStatus("register-status", isEdit ? "更新しています…" : "登録しています…");
   try {
     const body = {
       name: $("name").value,
@@ -318,24 +419,43 @@ async function doRegister() {
       name_kana: $("name_kana").value || undefined,
       hp_url: $("hp_url").value || undefined,
       tags: $("tags").value.split(",").map((s) => s.trim()).filter(Boolean),
-      description: $("ja").value.split("\\n").filter(Boolean).join(""),
-      description_en: $("en").value.split("\\n").filter(Boolean).join(" "),
       region: $("region").value || undefined,
       address: $("address").value || undefined,
-      image_keys: imageKeys,
     };
+
+    // 編集時、説明文（英訳）を触っていなければ送らない。既存の値を消さないため
+    // （PUTはbodyに無いキーには触れない）。
+    const ja = $("ja").value.split("\\n").filter(Boolean).join("");
+    if (ja || !isEdit) body.description = ja;
+    const en = $("en").value.split("\\n").filter(Boolean).join(" ");
+    if (en) body.description_en = en;
+
     const lat = parseFloat($("lat").value), lng = parseFloat($("lng").value);
     if (!isNaN(lat) && !isNaN(lng)) { body.lat = lat; body.lng = lng; body.geo_source = "map_click"; }
 
-    const data = await api("/api/introduce/artisan", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    setStatus("register-status", "登録しました", "ok");
-    $("created-id").textContent = data.id;
-    $("search-link").href = "/dev/search?q=" + encodeURIComponent($("name").value);
-    $("register-result").hidden = false;
+    if (!isEdit) body.image_keys = imageKeys;
+
+    const data = isEdit
+      ? await api("/api/introduce/artisan/" + encodeURIComponent(editingId), {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        })
+      : await api("/api/introduce/artisan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+    if (isEdit) {
+      setStatus("register-status", "更新しました", "ok");
+    } else {
+      setStatus("register-status", "登録しました", "ok");
+      $("created-id").textContent = data.id;
+      $("search-link").href = "/dev/search?q=" + encodeURIComponent($("name").value);
+      $("register-result").hidden = false;
+    }
+    await loadMine();
   } catch (e) {
     setStatus("register-status", e.message, "err");
   }
@@ -359,6 +479,13 @@ function boot() {
     $("lng").value = it.lon;
   });
   $("register").addEventListener("click", doRegister);
+  $("cancel-edit").addEventListener("click", resetForm);
+  $("mine-list").addEventListener("click", (e) => {
+    const editBtn = e.target.closest(".edit-btn");
+    if (editBtn) { startEdit(editBtn.dataset.id); return; }
+    const delBtn = e.target.closest(".delete-btn");
+    if (delBtn) doDelete(delBtn.dataset.id);
+  });
 }
 
 boot();
