@@ -10,8 +10,15 @@ import { keywordCards, cardsByTags, cardsWithEmbedding, loadSynonyms } from "./d
 import { expand, SYNONYMS } from "./synonyms.js";
 import { embed, cosine } from "./embed.js";
 
-const VECTOR_THRESHOLD = 0.45; // これ未満は「関係ない」として捨てる
-const VECTOR_LIMIT = 5;
+// 【重要】絶対値では切れない。実測で分布に2つの型があることが分かった
+// （設計書8-2-c）。
+//   bamboo flute      0.529 → 0.416          1位だけ突出（差 0.113）
+//   子どもと一緒に…  0.429 → 0.424 → 0.411  なだらか
+// 1本の絶対値だと、前者では無関係が混ざり、後者では正解（実在の体験施設）が
+// 0件になる。そのため最高スコアからの相対窓で切る。
+const VECTOR_REL_WINDOW = 0.06; // 最高スコアからこの差以内を残す
+const VECTOR_FLOOR = 0.35; // これ未満は何にも近くないので捨てる（相対窓だけだと無関係でも1件は返ってしまうため）
+const VECTOR_LIMIT = 5; // 最大件数
 
 export async function search(
   env,
@@ -72,11 +79,17 @@ export async function search(
   const [qv] = await embed(env.AI, [query]);
   const ms = Date.now() - t0;
 
-  const scored = pool
+  const ranked = pool
     .map(({ card, vector }) => ({ card, score: cosine(qv, vector) }))
-    .sort((a, b) => b.score - a.score)
-    .filter((x) => x.score >= VECTOR_THRESHOLD)
-    .slice(0, VECTOR_LIMIT);
+    .sort((a, b) => b.score - a.score);
+
+  const top = ranked[0];
+  const scored =
+    top && top.score >= VECTOR_FLOOR
+      ? ranked
+          .filter((x) => x.score >= VECTOR_FLOOR && x.score >= top.score - VECTOR_REL_WINDOW)
+          .slice(0, VECTOR_LIMIT)
+      : [];
 
   return {
     stage: "vector",
@@ -84,6 +97,11 @@ export async function search(
       card: x.card,
       score: Number(x.score.toFixed(3)),
     })),
-    meta: { embed_ms: ms, pool: pool.length, threshold: VECTOR_THRESHOLD },
+    meta: {
+      embed_ms: ms,
+      pool: pool.length,
+      rel_window: VECTOR_REL_WINDOW,
+      floor: VECTOR_FLOOR,
+    },
   };
 }
