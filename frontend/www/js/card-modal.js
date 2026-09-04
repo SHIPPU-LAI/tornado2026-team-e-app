@@ -77,7 +77,9 @@ function openDetailModal(cardEl, card) {
     .map((tag) => `<span class="tag">${tag}</span>`)
     .join('')
 
-  document.getElementById('modal-craftsman-name').textContent = craftsmanName
+  document.getElementById('modal-craftsman-name').innerHTML = card.is_dummy
+    ? `<span class="stat-badge">サンプル</span>${craftsmanName}`
+    : craftsmanName
   document.getElementById('modal-craftsman-workshop').textContent = craftsmanWorkshop
     ? `${craftsmanWorkshop}${card.region ? ` ／ ${card.region}` : ''}`
     : (card.region || '')

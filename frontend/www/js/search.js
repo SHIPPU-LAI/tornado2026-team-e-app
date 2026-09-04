@@ -147,7 +147,7 @@ function renderResults() {
     btn.innerHTML = `
       <span class="search-result-thumb swipe-card-image--${paletteIndexFor(card.id)}"></span>
       <span class="search-result-body">
-        <span class="search-result-name">${card.name}</span>
+        <span class="search-result-name">${card.is_dummy ? '<span class="stat-badge">サンプル</span>' : ''}${card.name}</span>
         <span class="search-result-region">${region}</span>
         <span class="search-result-teaser">${makeTeaser(card.description)}</span>
         <span class="search-result-tags">${tagsHtml}</span>
@@ -192,7 +192,9 @@ function openDetailModal(card) {
     .map((tag) => `<span class="tag">${tag}</span>`)
     .join('')
 
-  document.getElementById('modal-craftsman-name').textContent = craftsmanName
+  document.getElementById('modal-craftsman-name').innerHTML = card.is_dummy
+    ? `<span class="stat-badge">サンプル</span>${craftsmanName}`
+    : craftsmanName
   document.getElementById('modal-craftsman-workshop').textContent = craftsmanWorkshop
     ? `${craftsmanWorkshop}${card.region ? ` ／ ${card.region}` : ''}`
     : (card.region || '')

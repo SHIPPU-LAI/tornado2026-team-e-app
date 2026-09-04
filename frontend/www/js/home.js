@@ -112,7 +112,7 @@ function createCardElement(card) {
     <div class="swipe-card-body">
       <div class="swipe-card-image${imageClass}" ${imageStyle}></div>
       <div class="swipe-card-footer">
-        <h3 class="swipe-card-title">${card.name}</h3>
+        <h3 class="swipe-card-title">${card.is_dummy ? '<span class="stat-badge">サンプル</span>' : ''}${card.name}</h3>
         <p class="swipe-card-teaser">${makeTeaser(card.description)}</p>
       </div>
     </div>
