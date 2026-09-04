@@ -535,7 +535,9 @@ h2 {
   .genre-shell,
   .newuser-shell,
   .search-shell,
-  .login-shell {
+  .login-shell,
+  .reg-shell,
+  .profile-shell {
     flex: 1 1 auto;
     max-width: none;
     width: auto;

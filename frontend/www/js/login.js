@@ -11,6 +11,7 @@
 
 const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
 const LOGIN_FLAG_KEY = 'craftsMatchingIsLoggedIn' // auth-demo.js と共有するキー
+const ROLE_KEY = 'craftsMatchingRole' // 職人／一般の別。auth-demo.js と共有するキー
 
 const $ = (id) => document.getElementById(id)
 
@@ -45,10 +46,12 @@ async function refreshSession() {
         sessionEl.textContent = `ログイン中：${data.user.email}（役割：${data.user.role === 'artisan' ? '職人' : '一般'}）`
         logoutSection.style.display = ''
         localStorage.setItem(LOGIN_FLAG_KEY, 'true')
+        localStorage.setItem(ROLE_KEY, data.user.role)
     } catch {
         sessionEl.textContent = '現在ログインしていません'
         logoutSection.style.display = 'none'
         localStorage.removeItem(LOGIN_FLAG_KEY)
+        localStorage.removeItem(ROLE_KEY)
     }
 }
 

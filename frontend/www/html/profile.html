@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>プロフィール | 伝統工芸マッチング</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/profile.css">
+</head>
+
+<body>
+
+    <div class="profile-shell" id="profile-shell">
+
+        <header class="top-bar">
+            <button id="openMenuBtn" class="icon-btn" aria-label="メニュー">☰</button>
+            <a href="../html/search.html" class="icon-btn" aria-label="検索">
+                <img src="../images/search_icon.png" alt="">
+            </a>
+        </header>
+
+        <!-- 未ログインの場合はここだけ表示する -->
+        <div class="profile-auth-notice" id="auth-notice" style="display:none;">
+            <p id="auth-notice-text">ログイン状態を確認しています…</p>
+            <a href="../html/login.html" class="btn btn-primary">ログインする</a>
+        </div>
+
+        <div id="profile-body" style="display:none;">
+
+            <div class="profile-banner"></div>
+
+            <div class="profile-avatar-wrap">
+                <div class="profile-avatar">
+                    <svg viewBox="0 0 24 24"><path
+                            d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.5c-3.3 0-9.9 1.7-9.9 5v2.3h19.8V19.5c0-3.3-6.6-5-9.9-5z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="profile-identity">
+                <h1 id="profile-email">読み込み中…</h1>
+                <span class="profile-role-badge" id="profile-role-badge"></span>
+            </div>
+
+            <!-- 職人アカウントのときだけ表示：自分の登録カード一覧 -->
+            <section class="profile-section" id="artisan-section" style="display:none;">
+                <h2 class="profile-section-title">登録した工芸品</h2>
+                <p class="profile-section-note">
+                    <span class="profile-count" id="artisan-count">0</span><span class="profile-count-unit">件登録中</span>
+                </p>
+                <div class="profile-card-list" id="artisan-card-list"></div>
+                <a href="../html/register.html" class="btn btn-outline profile-register-link">＋ 新しく登録する</a>
+            </section>
+
+            <!-- 一般アカウントのときだけ表示：お気に入り件数 -->
+            <section class="profile-section" id="user-section" style="display:none;">
+                <h2 class="profile-section-title">お気に入り</h2>
+                <p class="profile-section-note">
+                    <span class="profile-count" id="user-count">0</span><span class="profile-count-unit">件保存中</span>
+                </p>
+                <div class="profile-card-list" id="user-card-list"></div>
+                <a href="../html/favorites.html" class="btn btn-outline profile-register-link">お気に入り一覧を見る</a>
+            </section>
+
+            <div class="profile-logout-wrap">
+                <button type="button" class="btn btn-outline profile-logout-btn" id="logout-btn">ログアウト</button>
+                <p class="profile-status" id="logout-status"></p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 背景の黒幕 -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- ハンバーガーメニュー本体 -->
+    <nav class="drawer-menu" id="drawerMenu">
+        <div class="drawer-header">
+            <button class="close-btn" id="closeMenuBtn">✕</button>
+        </div>
+        <!-- ログイン状態に応じてJS（auth-demo.js）がここを書き換える -->
+        <ul class="drawer-nav-list" id="drawerNavList"></ul>
+
+        <ul class="drawer-nav-list-bottom">
+            <li>
+                <a href="#" class="drawer-nav-item" id="languageBtn">
+                    <img src="../images/langage.png" alt="">
+                    <span>言語設定</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="drawer-nav-item" id="fontSizeBtn">
+                    <span class="drawer-nav-icon" aria-hidden="true">Aa</span>
+                    <span>文字の大きさ</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="drawer-nav-item">
+                    <img src="../images/setting.png" alt="">
+                    <span>その他設定</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 文字の大きさ設定ポップアップ -->
+    <div class="fontsize-modal-overlay" id="fontsizeModalOverlay">
+        <div class="fontsize-modal" role="dialog" aria-modal="true">
+            <div class="fontsize-modal-header">
+                <h2>文字の大きさ</h2>
+                <button class="fontsize-modal-close" id="fontsizeModalClose" aria-label="閉じる">✕</button>
+            </div>
+            <div class="fontsize-option-list" id="fontsizeOptionList"></div>
+        </div>
+    </div>
+
+    <!-- 言語設定ポップアップ -->
+    <div class="language-modal-overlay" id="languageModalOverlay">
+        <div class="language-modal" role="dialog" aria-modal="true">
+            <div class="language-modal-header">
+                <h2>言語設定</h2>
+                <button class="language-modal-close" id="languageModalClose" aria-label="閉じる">✕</button>
+            </div>
+            <p class="language-modal-note">
+                言語を選ぶと、次回からその言語で表示されるよう準備を進めます。英訳がないものは日本語のままとなります。
+            </p>
+            <div class="language-option-list" id="languageOptionList"></div>
+        </div>
+    </div>
+
+    <script>window.SITE_BASE = '../';</script>
+    <script src="../js/font-size.js"></script>
+    <script src="../js/language.js"></script>
+    <script src="../js/auth-demo.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+
+</html>

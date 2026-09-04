@@ -1,0 +1,303 @@
+/* ===================================================================
+   profile.css — プロフィール画面
+   login.css / register.css と同じ考え方で作っている。
+   style.css 側の共通トークン（--color-*, .btn, .field 等）を前提とする。
+=================================================================== */
+
+:root {
+  --pf-dark: #3d1c17;
+  --pf-shu: #c1440e;
+  --pf-bg: #faf3e4;
+  --pf-cream: #fff8ee;
+  --pf-blue: #1c63c9;
+  --pf-blue-deep: #123f80;
+}
+
+.profile-shell {
+  position: relative;
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--pf-bg);
+  overflow-x: hidden;
+}
+
+.profile-shell .top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 17px;
+  background: var(--pf-dark);
+}
+
+.profile-shell .top-bar .icon-btn {
+  background: none;
+  border: none;
+  color: var(--pf-cream);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.profile-shell .top-bar .icon-btn img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* ---------- 帯状の模様バナー＋丸いアバター ---------- */
+
+.profile-banner {
+  position: relative;
+  height: 220px;
+  background-color: var(--pf-blue);
+  background-image: url("../images/profile-banner-pattern.png");
+  background-repeat: repeat;
+  background-size: 128px 84px;
+  /* 下端をギザギザに切り取り、模様の下に本文の地色が覗くようにする */
+  clip-path: polygon(0 0, 100% 0, 100% 74%, 52% 100%, 0 66%);
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: -78px;
+  /* バナーに少し重ねる */
+}
+
+.profile-avatar {
+  width: 156px;
+  height: 156px;
+  border-radius: 50%;
+  background: var(--color-line);
+  border: 6px solid var(--pf-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-avatar svg {
+  width: 70%;
+  height: 70%;
+  fill: #9c9488;
+}
+
+/* ---------- 名前・役割 ---------- */
+
+.profile-identity {
+  text-align: center;
+  padding: 14px 22px 0;
+}
+
+.profile-identity h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--pf-dark);
+  margin: 0 0 6px;
+  word-break: break-all;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--color-kin-bg);
+  color: var(--color-kin);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* ---------- コンテンツ（職人／一般で出し分け） ---------- */
+
+.profile-section {
+  padding: 22px 22px;
+  border-top: 1px solid var(--color-line);
+}
+
+.profile-section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--pf-dark);
+  margin: 0 0 4px;
+}
+
+.profile-section-note {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin: 0 0 14px;
+  line-height: 1.7;
+}
+
+.profile-count {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--pf-shu);
+}
+
+.profile-count-unit {
+  font-size: 0.95rem;
+  color: var(--color-ink-soft);
+  margin-left: 4px;
+}
+
+.profile-card-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.profile-card-item {
+  position: relative;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.profile-card-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* プレースホルダー用パレット（swipe-card / fav-itemと同じ考え方） */
+.profile-card-photo--1 {
+  background: linear-gradient(160deg, #3d1c17 0%, #7a3b2c 100%);
+}
+
+.profile-card-photo--2 {
+  background: linear-gradient(160deg, #eef2f5 0%, #c7d6de 100%);
+}
+
+.profile-card-photo--3 {
+  background: linear-gradient(160deg, #c1440e 0%, #7a2a0a 100%);
+}
+
+.profile-card-photo--4 {
+  background: linear-gradient(160deg, #2c5b82 0%, #16324f 100%);
+}
+
+.profile-card-photo--5 {
+  background: linear-gradient(160deg, #4a2e1a 0%, #7a4a24 100%);
+}
+
+.profile-card-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px 10px 10px;
+  background: linear-gradient(to top, rgba(20, 8, 4, 0.85) 0%, transparent 100%);
+}
+
+.profile-card-name {
+  color: #fff8ee;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-card-sub {
+  color: rgba(255, 248, 238, 0.8);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-empty-note {
+  font-size: 0.88rem;
+  color: var(--color-ink-soft);
+  padding: 6px 0;
+}
+
+.profile-register-link {
+  display: inline-block;
+  margin-top: 14px;
+}
+
+/* ---------- 未ログイン時の案内 ---------- */
+
+.profile-auth-notice {
+  margin: 24px 22px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--color-kin-bg);
+  border: 1px solid var(--color-line);
+}
+
+.profile-auth-notice p {
+  margin: 0 0 14px;
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
+/* ---------- ログアウト ---------- */
+
+.profile-logout-wrap {
+  padding: 8px 22px 40px;
+}
+
+.profile-logout-btn {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 999px;
+}
+
+.profile-status {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  min-height: 1.3em;
+}
+
+.profile-status.is-error {
+  color: var(--pf-shu);
+  font-weight: 700;
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しています（全ページで1本化）。
+   ======================================================== */
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   ============================================ */
+@media (min-width: 1024px) {
+  .profile-shell {
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  .profile-banner {
+    height: 280px;
+  }
+
+  .profile-section,
+  .profile-logout-wrap {
+    padding-left: 56px;
+    padding-right: 56px;
+  }
+
+  .profile-section > * {
+    max-width: 640px;
+  }
+
+  .profile-logout-btn {
+    max-width: 320px;
+  }
+}

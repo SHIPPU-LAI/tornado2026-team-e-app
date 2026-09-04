@@ -200,8 +200,10 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* Firefox */
+
+  /* スクロールバーを表示する（Firefox） */
+  scrollbar-width: thin;
+  scrollbar-color: var(--genre-cream) rgba(255, 255, 255, 0.15);
 
   cursor: grab;
   /* ← 追加：つかめる場所だと分かるように */
@@ -210,9 +212,23 @@
   transition: opacity 0.7s ease 0.4s;
 }
 
+/* スクロールバーを表示する（Chrome / Safari / Edge） */
 .genre-scroll::-webkit-scrollbar {
-  display: none;
-  /* Chrome/Safari */
+  height: 8px;
+}
+
+.genre-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.genre-scroll::-webkit-scrollbar-thumb {
+  background: var(--genre-cream);
+  border-radius: 999px;
+}
+
+.genre-scroll::-webkit-scrollbar-thumb:hover {
+  background: #fff;
 }
 
 .genre-scene.is-revealed .genre-scroll {

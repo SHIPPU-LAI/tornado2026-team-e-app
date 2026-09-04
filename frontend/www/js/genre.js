@@ -467,9 +467,50 @@
         genreScroll.scrollLeft += event.deltaY;
         event.preventDefault();
       }
+      pauseAutoScroll();
     },
     { passive: false }
   );
+
+  /* ---- 自動横スクロール ----
+     手動でのドラッグ／ホイール／タッチ操作があった場合は自動スクロールを
+     一時停止し、しばらく操作が無ければ自動的に再開する。
+     手動操作を妨げないことを優先しているため、常に手でも動かせる。 */
+  const AUTO_SCROLL_SPEED = 0.35; // 1フレームあたりに進む距離(px)。増やすと速くなる
+  const AUTO_SCROLL_RESUME_DELAY = 2500; // 操作が止まってから自動再開までの待ち時間(ms)
+
+  let autoScrollPaused = false;
+  let autoScrollResumeTimer = null;
+
+  function pauseAutoScroll() {
+    autoScrollPaused = true;
+    if (autoScrollResumeTimer) clearTimeout(autoScrollResumeTimer);
+    autoScrollResumeTimer = setTimeout(() => {
+      autoScrollPaused = false;
+    }, AUTO_SCROLL_RESUME_DELAY);
+  }
+
+  function autoScrollTick() {
+    if (!autoScrollPaused) {
+      const maxScroll = genreScroll.scrollWidth - genreScroll.clientWidth;
+      if (maxScroll > 0) {
+        let next = genreScroll.scrollLeft + AUTO_SCROLL_SPEED;
+        if (next >= maxScroll) {
+          next = 0; // 端まで着いたら最初に戻る
+        }
+        genreScroll.scrollLeft = next;
+      }
+    }
+    requestAnimationFrame(autoScrollTick);
+  }
+
+  if (!reduceMotion) {
+    requestAnimationFrame(autoScrollTick);
+  }
+
+  // 既存のドラッグ操作（mousedown）や、タッチでの手動スクロールがあれば一時停止する
+  genreScroll.addEventListener("mousedown", pauseAutoScroll);
+  genreScroll.addEventListener("touchstart", pauseAutoScroll, { passive: true });
 
 
   /* -----------------------------------------------------------

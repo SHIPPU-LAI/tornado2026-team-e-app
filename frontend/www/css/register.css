@@ -1,0 +1,420 @@
+/* ===================================================================
+   register.css — 工芸品の登録画面（職人アカウント用）
+   login.css / newuser.css と同じ考え方で作っている。
+   style.css 側の共通トークン（--color-*, .btn, .field 等）を前提とする。
+=================================================================== */
+
+:root {
+    --reg-dark: #3d1c17;
+    --reg-shu: #c1440e;
+    --reg-shu-deep: #8f2e08;
+    --reg-bg: #faf3e4;
+    --reg-cream: #fff8ee;
+}
+
+.reg-shell {
+    position: relative;
+    max-width: 560px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--reg-bg);
+    overflow-x: hidden;
+}
+
+.reg-shell .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 17px;
+    background: var(--reg-dark);
+}
+
+.reg-shell .top-bar .icon-btn {
+    background: none;
+    border: none;
+    color: var(--reg-cream);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.top-bar-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--reg-cream);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.top-bar-home-link span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar-home-link img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.top-bar-home-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 見出し ---------- */
+
+.reg-hero {
+    padding: 28px 22px 22px;
+    /* login.cssの.lg-heroと同じ考え方：半透明の濃い色を模様の上に重ねて、
+     少し暗くしつつ模様自体は透けて見えるようにする。
+     画像自体は紺系なので、重ねる色も同系統にして馴染ませている。 */
+    background-image:
+        linear-gradient(160deg, rgba(15, 25, 38, 0.5) 0%, rgba(25, 40, 58, 0.5) 100%),
+        url("../images/reg-hero-pattern.png");
+    background-repeat: no-repeat, repeat;
+    background-size: cover, 110px 95px;
+    color: var(--reg-cream);
+}
+
+.reg-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--reg-cream);
+    margin: 0 0 8px;
+}
+
+.reg-hero p {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    margin: 0;
+    color: rgba(255, 248, 238, 0.9);
+}
+
+/* ---------- ログインしていない場合の案内 ---------- */
+
+.reg-auth-notice {
+    margin: 22px;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--color-kin-bg);
+    border: 1px solid var(--color-line);
+}
+
+.reg-auth-notice p {
+    margin: 0 0 14px;
+    font-size: 0.98rem;
+    line-height: 1.8;
+}
+
+.reg-auth-notice:last-child p {
+    margin-bottom: 0;
+}
+
+/* ---------- セクション ---------- */
+
+.reg-section {
+    padding: 24px 22px;
+    border-top: 1px solid var(--color-line);
+}
+
+.reg-section:first-of-type {
+    border-top: none;
+}
+
+.reg-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--reg-dark);
+    margin: 0 0 6px;
+}
+
+.reg-section-note {
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+    line-height: 1.7;
+    margin: 0 0 16px;
+}
+
+.reg-field-label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 14px 0 6px;
+}
+
+.reg-field-label:first-child {
+    margin-top: 0;
+}
+
+.reg-field-label .reg-optional {
+    font-weight: 400;
+    color: var(--color-ink-soft);
+    font-size: 0.78rem;
+    margin-left: 6px;
+}
+
+textarea.field {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.7;
+    font-family: var(--font-body);
+}
+
+.reg-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.reg-row .field {
+    flex: 1 1 auto;
+    margin-bottom: 0;
+}
+
+.reg-row .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* ---------- AI下書きサポート ---------- */
+
+.reg-draft-box {
+    background: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.reg-draft-question+.reg-draft-question {
+    margin-top: 14px;
+}
+
+.reg-draft-result {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: var(--color-kin-bg);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    display: none;
+}
+
+.reg-draft-result.is-visible {
+    display: block;
+}
+
+/* ---------- 住所の候補リスト ---------- */
+
+.reg-geocode-results {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reg-geocode-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.reg-geocode-item:hover {
+    border-color: var(--reg-shu);
+}
+
+.reg-geocode-item.is-selected {
+    border-color: var(--reg-shu);
+    background: var(--color-kin-bg);
+}
+
+.reg-geo-confirmed {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+}
+
+/* ---------- タグ ---------- */
+
+.reg-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 0;
+}
+
+.reg-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-kin-bg);
+    color: var(--color-kin);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.reg-tag-chip button {
+    border: none;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    padding: 0;
+}
+
+/* ---------- 画像アップロード ---------- */
+
+.reg-image-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.reg-image-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+}
+
+.reg-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.reg-image-item.is-uploading::after {
+    content: "アップロード中…";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(61, 28, 23, 0.55);
+    color: #fff;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 4px;
+}
+
+.reg-image-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(61, 28, 23, 0.75);
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reg-image-add-btn {
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    border: 2px dashed var(--color-line);
+    background: none;
+    color: var(--color-ink-soft);
+    font-size: 1.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reg-image-add-btn:hover {
+    border-color: var(--reg-shu);
+    color: var(--reg-shu);
+}
+
+/* ---------- ステータス・送信 ---------- */
+
+.reg-status {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    min-height: 1.4em;
+}
+
+.reg-status.is-error {
+    color: var(--reg-shu);
+    font-weight: 700;
+}
+
+.reg-status.is-ok {
+    color: #3d6b33;
+    font-weight: 700;
+}
+
+.reg-submit-wrap {
+    padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+}
+
+.reg-submit-btn {
+    width: 100%;
+    min-height: 56px;
+    font-size: 1.08rem;
+    border-radius: 999px;
+}
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   ============================================ */
+@media (min-width: 1024px) {
+    .reg-shell {
+        max-width: none;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .reg-hero,
+    .reg-section,
+    .reg-submit-wrap,
+    .reg-auth-notice {
+        padding-left: 56px;
+        padding-right: 56px;
+    }
+
+    .reg-hero h1,
+    .reg-hero p,
+    .reg-section,
+    .reg-submit-btn {
+        max-width: 680px;
+    }
+
+    .reg-auth-notice {
+        max-width: 680px;
+    }
+}
