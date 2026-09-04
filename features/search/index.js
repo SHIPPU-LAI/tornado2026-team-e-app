@@ -21,6 +21,7 @@ import {
   countEmbedded,
   listCards,
   buildEmbeddingText,
+  getEnglishI18n,
 } from "./db.js";
 import { search } from "./search.js";
 import { embed, EMBED_MODEL } from "./embed.js";
@@ -47,8 +48,31 @@ app.get("/dev/search", (c) => c.html(renderPage()));
 app.get("/api/search/facets", async (c) => c.json(await facets(db(c))));
 
 app.get("/api/search/cards", async (c) => {
-  const { block = "", prefecture = "", tag = "", name = "" } = c.req.query();
-  const items = await listCards(db(c), { block, prefecture, tag, name });
+  const { block = "", prefecture = "", tag = "", name = "", lang = "" } = c.req.query();
+  let items = await listCards(db(c), { block, prefecture, tag, name });
+
+  // /api/search の applyLang（search.js）と同じ考え方：card_i18n(lang='en') が
+  // あれば name/description を差し替え、無ければ日本語のまま（その場翻訳はしない）。
+  // ただしこちらの items はカードオブジェクトそのもの（{card:...}の入れ子ではない）
+  // なので、そのまま流用できずここに書いている。
+  // card_i18n は紹介機能の所有テーブル。ここでは読むだけ。
+  //
+  // 件数ぶん getEnglishI18n を呼ぶ N+1 になるが、現状20件程度なので許容する。
+  // 件数が大きく増えたら、一括取得するクエリに見直しが要る。
+  if (lang === "en" && items.length > 0) {
+    items = await Promise.all(
+      items.map(async (card) => {
+        const i18n = await getEnglishI18n(db(c), card.id);
+        if (!i18n) return card;
+        return {
+          ...card,
+          name: i18n.name || card.name,
+          description: i18n.description || card.description,
+        };
+      }),
+    );
+  }
+
   return c.json({ items, total: items.length, next_cursor: null });
 });
 
