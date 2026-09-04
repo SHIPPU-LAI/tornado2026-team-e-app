@@ -192,7 +192,9 @@
 
 .genre-scroll {
   position: relative;
-  z-index: 2;
+  z-index: 5;
+  /* floating-cloud(z-index:3)より前面にして、雲がボタンの上に
+     重なって隠してしまわないようにする */
   width: 100%;
   padding: 0 0 22px;
   overflow-x: auto;
@@ -228,19 +230,56 @@
 .genre-btn {
   appearance: none;
   border: none;
+  background: none;
   flex: 0 0 auto;
-  width: 92px;
-  height: 92px;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--genre-maroon);
+  font-family: var(--genre-font-body);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 画像が用意できていないジャンル（木工など）だけ、
+   今まで通りの丸背景+文字のボタンに戻す */
+.genre-btn--fallback {
   border-radius: 50%;
   background: var(--genre-maroon);
   color: var(--genre-cream);
-  font-family: var(--genre-font-body);
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  cursor: pointer;
   box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 元画像は濃い赤茶色のシルエット。丸背景を無くしたことで、
+   明るいオレンジの舞台背景に直接乗るため、白抜きにはせず
+   影を軽く足して馴染ませる。 */
+.genre-btn-icon {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 5px rgba(43, 24, 16, 0.35));
+  pointer-events: none;
+}
+
+.genre-btn-label {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--genre-maroon);
+  text-shadow: 0 1px 3px rgba(255, 248, 238, 0.6);
+  pointer-events: none;
+}
+
+/* フォールバックのボタンは文字色をクリーム色に戻す */
+.genre-btn--fallback .genre-btn-label {
+  color: var(--genre-cream);
+  text-shadow: none;
 }
 
 .genre-btn:hover,
@@ -447,6 +486,8 @@
 
   writing-mode: vertical-rl;
   text-orientation: upright;
+  white-space: nowrap;
+  /* パネル幅が狭くなっても2列に折り返されないようにする */
 
   font-family: "Zen Antique", serif;
   font-size: 6rem;
@@ -658,8 +699,7 @@
   .genre-shell {
     max-width: none;
     width: 100%;
-    min-height: 100vh;
-    height: auto;
+    height: 100vh;
     margin: 0;
     overflow-y: auto;
   }
@@ -669,6 +709,23 @@
     max-width: 560px;
   }
 
+  /* ヘッダーの高さを少し詰める */
+  .genre-shell .top-bar {
+    padding: 10px 24px;
+  }
+
+  .genre-shell .top-bar .icon-btn {
+    font-size: 2rem;
+  }
+
+  .genre-shell .top-bar-actions .icon-btn {
+    font-size: 1.6rem;
+  }
+
+  .genre-shell .top-bar-actions img {
+    width: 36px;
+  }
+
   /* ① 横スクロールの修正：折り返しグリッド化していたのをやめ、
      .genre-scroll 本来の overflow-x:auto（横スクロール）に戻す */
   .genre-scroll {
@@ -676,13 +733,19 @@
   }
 
   .genre-track {
-    gap: 24px;
+    gap: 35px;
   }
 
   .genre-btn {
-    width: 108px;
-    height: 108px;
+    width: 130px;
+    height: 130px;
     font-size: 0.95rem;
+    margin-top: 30px;
+  }
+
+  .genre-btn-icon {
+    width: 120px;
+    height: 120px;
   }
 
   .genre-footer {
@@ -694,12 +757,14 @@
     max-width: 380px;
   }
 
-  /* ② 暖簾を3枚→5枚に。分割位置を20/40/60/80%の4箇所に増やす */
+  /* ② 暖簾を3枚→5枚に。分割位置を20/40/60/80%の4箇所に増やす。
+     長さ（--noren-height）ももう少し長くする。 */
   .noren-layer {
     --noren-split-1: 20;
     --noren-split-2: 40;
     --noren-split-3: 60;
     --noren-split-4: 80;
+    --noren-height: 97%;
   }
 
   .noren-leaf--mid-left,
@@ -727,23 +792,49 @@
     width: calc((100 - var(--noren-split-4)) * 1% + 60px);
   }
 
-  /* 追加した2枚は、既存パネルの複雑な継ぎ目模様（細かく手調整された
-     座標）を複製すると破綻しやすいため、青海波タイル柄を控えめに
-     敷くだけのシンプルな意匠にしている */
-  .noren-leaf--mid-left .noren-leaf-upper,
-  .noren-leaf--mid-left .noren-leaf-lower,
-  .noren-leaf--mid-right .noren-leaf-upper,
-  .noren-leaf--mid-right .noren-leaf-lower {
-    background-image: url("../images/noren-pattern.png");
-    background-size: 70px 70px;
-    background-blend-mode: overlay;
+  /* 中央パネルが以前より細くなった分、文字も少し小さくして収める */
+  .noren-title {
+    font-size: 4.4rem;
+    letter-spacing: 0.3em;
+  }
+
+  /* 開くときの「9倍に拡大」という演出は単色デザイン用に作られたもので、
+     実際の柄画像だとタイルの無地部分が巨大な単色の塊になって見えて
+     しまう。PC版では拡大の度合いを大幅に抑え、フェードアウトを
+     組み合わせることで、無地部分が目立たないようにする。 */
+  .noren-layer {
+    transition: transform 1.3s cubic-bezier(0.55, 0, 0.1, 1), opacity 1s ease 0.3s;
+  }
+
+  .noren-layer.is-zooming {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+
+  /* 5枚構成では、3枚用に手調整されていた円の継ぎ目模様
+     （.noren-pattern / .noren-cloud-pattern）は位置がずれて
+     破綻するため非表示にする。
+     代わりに、5枚ぶんを通して1枚につながる暖簾専用画像
+     （noren-panorama.png）を使う。実際のサイズ・位置は
+     genre.js の alignPanoramaBackground() が実測して割り当てる
+     （JSでbackground-size/positionを設定するため、ここでは
+     background-image と repeat だけを指定すればよい）。 */
+  .noren-pattern,
+  .noren-cloud-pattern {
+    display: none;
+  }
+
+  .noren-leaf-upper,
+  .noren-leaf-lower {
+    background-image: url("../images/noren-panorama.png");
+    background-repeat: no-repeat;
   }
 
   /* ③ 開いた後の四隅の模様円：広い画面に合わせて大きく・
      余白を活かした配置に描き直す */
   .scene-pattern--tl {
-    width: 460px;
-    height: 460px;
+    width: 400px;
+    height: 400px;
     top: -140px;
     left: -140px;
   }
@@ -756,10 +847,10 @@
   }
 
   .scene-pattern--bl {
-    width: 300px;
-    height: 300px;
-    bottom: 220px;
-    left: -120px;
+    width: 200px;
+    height: 200px;
+    bottom: 180px;
+    left: -90px;
   }
 
   .scene-pattern--br {
@@ -768,4 +859,5 @@
     bottom: 60px;
     right: -160px;
   }
+
 }

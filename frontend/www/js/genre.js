@@ -21,6 +21,8 @@
   const leafLeftUpper = document.getElementById("leaf-left-upper");
   const leafLeftLower = document.getElementById("leaf-left-lower");
 
+  const leavesEl = document.getElementById("noren-leaves");
+
   // PC版（幅1024px以上）でだけ表示される追加パネル。
   // スマホ版はCSS側でdisplay:noneのため、常にDOMに存在していても
   // アニメーションのコストはごくわずか（見た目に影響しない）。
@@ -64,6 +66,99 @@
       leafRightUpper, ".noren-pattern--seamB-right",
       leafRightLower, ".noren-pattern--seamB-right-lower"
     );
+    alignPanoramaBackground();
+  }
+
+  /* -----------------------------------------------------------
+     0-b. PC版（5枚構成）用：1枚の大きな暖簾画像（noren-panorama.png）を
+     .noren-leaves の背後に敷いたつもりで、5枚それぞれの upper/lower に
+     「その位置に対応する窓」だけを正確に切り出して見せる。
+     タイル状の繰り返しではなく、実測したピクセル単位で
+     background-size と background-position を割り当てるため、
+     継ぎ目をまたいでも模様が必ずつながって見える。
+  ----------------------------------------------------------- */
+  const PANORAMA_PANELS = [
+    { outer: leafLeft, upper: leafLeftUpper, lower: leafLeftLower },
+    { outer: leafMidLeft, upper: leafMidLeftUpper, lower: leafMidLeftLower },
+    { outer: leafCenter, upper: leafCenterUpper, lower: leafCenterLower },
+    { outer: leafMidRight, upper: leafMidRightUpper, lower: leafMidRightLower },
+    { outer: leafRight, upper: leafRightUpper, lower: leafRightLower },
+  ];
+
+  // noren-panorama.png の実際のピクセルサイズ（歪ませずに配置するために使う）
+  const PANORAMA_NATURAL_WIDTH = 2891;
+  const PANORAMA_NATURAL_HEIGHT = 1400;
+
+  // 見せる位置の微調整用（値を変えるとその方向にずらせる）。
+  // PANORAMA_SHIFT_X … 正の値で右方向へ、負の値で左方向へずらす（px）
+  // PANORAMA_SHIFT_Y … 正の値で下方向へ、負の値で上方向へずらす（px）
+  const PANORAMA_SHIFT_X = 120;
+  const PANORAMA_SHIFT_Y = 0;
+  // 実測タイミングのズレで端に1〜数pxの隙間が出ないよう、少し余分に拡大しておく
+  const PANORAMA_SAFETY_SCALE = 1.06;
+
+  function alignPanoramaBackground() {
+    if (!leavesEl) return;
+    // offsetWidth/offsetHeightはtransform(回転・傾き)の影響を受けない
+    // 「本来のレイアウト上のサイズ」なので、ゆらゆら揺れている最中に
+    // 測定しても、毎回必ず同じ結果になる（更新のたびに見え方が
+    // 変わってしまう問題の対策）。
+    const containerWidth = leavesEl.offsetWidth;
+    const containerHeight = leavesEl.offsetHeight;
+    if (containerWidth === 0 || containerHeight === 0) return;
+
+    // background-size:cover と同じ考え方：縦横比を保ったまま、
+    // 幅・高さのどちらもちゃんと覆うように、大きい方の倍率に合わせて拡大する
+    // （画像がのれん全体より大きくはみ出す分は、中央基準でトリミングされる）
+    const scale =
+      Math.max(
+        containerWidth / PANORAMA_NATURAL_WIDTH,
+        containerHeight / PANORAMA_NATURAL_HEIGHT
+      ) * PANORAMA_SAFETY_SCALE;
+    const scaledWidth = PANORAMA_NATURAL_WIDTH * scale;
+    const scaledHeight = PANORAMA_NATURAL_HEIGHT * scale;
+    const bgSize = `${scaledWidth}px ${scaledHeight}px`;
+
+    // 画像全体を .noren-leaves の中央に置いたときの、
+    // 画像左上角の位置（中央寄せなので、はみ出す分はマイナス値になる）。
+    // そこから PANORAMA_SHIFT_X/Y ぶんだけずらし、それでも
+    // 端に隙間ができないよう、必ず「はみ出す範囲内」に収まるようクランプする。
+    const minOffsetX = containerWidth - scaledWidth; // これより右にずらすと右端に隙間ができる
+    const minOffsetY = containerHeight - scaledHeight;
+    const centeredX = (containerWidth - scaledWidth) / 2;
+    const centeredY = (containerHeight - scaledHeight) / 2;
+
+    const baseOffsetX = Math.min(0, Math.max(minOffsetX, centeredX + PANORAMA_SHIFT_X));
+    const baseOffsetY = Math.min(0, Math.max(minOffsetY, centeredY + PANORAMA_SHIFT_Y));
+
+    // 各パネルの左端位置は、直前のパネルまでの offsetWidth の合計として
+    // 積み上げて求める（＝レイアウト上の並び順どおりの、揺れに左右されない位置）。
+    // leaf-left は margin-left:-60px の分だけ、コンテナの左端より
+    // 60px左から始まっている。
+    let cumulativeX = -60;
+
+    for (const panel of PANORAMA_PANELS) {
+      if (!panel.outer || !panel.upper || !panel.lower) continue;
+
+      // モバイル時は mid-left/mid-right が display:none なので、
+      // 位置の積み上げ計算に含めない
+      if (getComputedStyle(panel.outer).display === "none") continue;
+
+      const panelWidth = panel.outer.offsetWidth;
+      const panelOffsetX = cumulativeX;
+      const upperHeight = panel.upper.offsetHeight;
+
+      const posX = baseOffsetX - panelOffsetX;
+
+      panel.upper.style.backgroundSize = bgSize;
+      panel.upper.style.backgroundPosition = `${posX}px ${baseOffsetY}px`;
+
+      // lowerはupperの続きの高さから始まる窓として切り出す
+      panel.lower.style.backgroundSize = bgSize;
+      panel.lower.style.backgroundPosition = `${posX}px ${baseOffsetY - upperHeight}px`;
+
+      cumulativeX += panelWidth;
+    }
   }
 
   /* -----------------------------------------------------------
@@ -249,6 +344,9 @@
   window.addEventListener("load", alignAllSeamCircles);
   window.addEventListener("resize", alignAllSeamCircles);
   alignAllSeamCircles();
+  // フォント読み込みなどでレイアウトが少し遅れて確定することがあるため、
+  // 少し時間を置いてもう一度だけ計算し直しておく（保険）
+  window.setTimeout(alignAllSeamCircles, 300);
 
   /* -----------------------------------------------------------
    3. ジャンル選択（横スクロール・タップでhome.htmlへ遷移）
@@ -260,17 +358,22 @@
   // 実際のバックエンド（cards.tags）に存在する値、または
   // 今後追加予定のジャンル（能楽など）。ボタンのkeyは表示上使わず、
   // クリック時は label（＝tagsの値）をそのままAPIの ?tag= に渡す。
+  // 実際のバックエンド（cards.tags）に存在する値、または
+  // 今後追加予定のジャンル（能楽など）。ボタンのkeyは表示上使わず、
+  // クリック時は label（＝tagsの値）をそのままAPIの ?tag= に渡す。
+  // icon が無いジャンル（木工）は、今のところアイコン画像が
+  // 用意できていないため、文字だけのボタンになる。
   const GENRES = {
-    toujiki: { label: "陶磁器" },
-    shikki: { label: "漆器" },
-    senshoku: { label: "染物" },
+    toujiki: { label: "陶磁器", icon: "genre-icon-toujiki.png" },
+    shikki: { label: "漆器", icon: "genre-icon-shikki.png" },
+    senshoku: { label: "染物", icon: "genre-icon-someomo.png" },
     mokkou: { label: "木工" },
-    kinkou: { label: "金工" },
-    garasu: { label: "ガラス" },
-    washi: { label: "和紙" },
-    take: { label: "竹工" },
-    nuno: { label: "織物" },
-    gakki: { label: "楽器" },
+    kinkou: { label: "金工", icon: "genre-icon-kinkou.png" },
+    garasu: { label: "ガラス", icon: "genre-icon-garasu.png" },
+    washi: { label: "和紙", icon: "genre-icon-washi.png" },
+    take: { label: "竹工", icon: "genre-icon-take.png" },
+    nuno: { label: "織物", icon: "genre-icon-nuno.png" },
+    gakki: { label: "楽器", icon: "genre-icon-gakki.png" },
   };
 
   function renderGenreButtons() {
@@ -281,7 +384,17 @@
       btn.className = "genre-btn";
       btn.type = "button";
       btn.dataset.genre = key;
-      btn.textContent = data.label;
+
+      const iconHtml = data.icon
+        ? `<img src="./images/${data.icon}" alt="" class="genre-btn-icon">`
+        : "";
+
+      // 画像が無いジャンル（木工など）は、今まで通り丸背景+文字のボタンにする
+      if (!data.icon) {
+        btn.classList.add("genre-btn--fallback");
+      }
+
+      btn.innerHTML = `${iconHtml}<span class="genre-btn-label">${data.label}</span>`;
       genreTrack.appendChild(btn);
     });
   }

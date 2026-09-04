@@ -5,11 +5,11 @@
      POST /api/auth/login   { email, password }
      POST /api/auth/logout
      GET  /api/auth/me      → { user: { email, role } }
-   フロントと同じ Worker に同居しているため、同一オリジン。
-   Cookieベースのセッションのため、fetchには credentials: "include" を付ける。
+   Cookieベースのセッションのため、fetchには必ず
+   credentials: "include" を付ける（クロスオリジンなので "same-origin" では効かない）。
 =================================================================== */
 
-const API_BASE = window.location.origin
+const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
 const LOGIN_FLAG_KEY = 'craftsMatchingIsLoggedIn' // auth-demo.js と共有するキー
 
 const $ = (id) => document.getElementById(id)
@@ -22,7 +22,7 @@ function setStatus(id, msg, kind) {
 
 async function api(path, opts) {
     const res = await fetch(new URL(path, API_BASE), {
-        credentials: 'include', // Cookieを送るために必須
+        credentials: 'include', // クロスオリジンでCookieを送るために必須
         ...opts,
     })
     let data = null
