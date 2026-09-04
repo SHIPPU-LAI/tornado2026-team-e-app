@@ -47,6 +47,9 @@
     `;
     }
 
+    // 「プロフィール」の項目は、遷移先のページ自体が無く、出す内容も
+    // 未決のためいったん外してある。画面ができたら<li>を戻すだけで復活する
+    // （images/profileicon.pngは残してあるので削除しないこと）。
     function loggedInNavHTML() {
         return `
       <li>
@@ -59,12 +62,6 @@
         <a href="${BASE}html/favorites.html" class="drawer-nav-item">
           <img src="${BASE}images/Grocery Shelf.png" alt="">
           <span>お気に入り</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="drawer-nav-item">
-          <img src="${BASE}images/profileicon.png" alt="">
-          <span>プロフィール</span>
         </a>
       </li>
       <li>
