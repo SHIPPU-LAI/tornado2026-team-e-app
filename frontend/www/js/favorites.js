@@ -156,7 +156,10 @@
 
     async function loadLiked() {
         try {
-            const res = await fetch(new URL("/api/introduce/user/liked", API_BASE), {
+            const likedUrl = new URL("/api/introduce/user/liked", API_BASE);
+            const lang = window.getCraftsLang ? window.getCraftsLang() : "ja";
+            if (lang !== "ja") likedUrl.searchParams.set("lang", lang);
+            const res = await fetch(likedUrl, {
                 credentials: "include",
             });
             if (res.status === 401) {

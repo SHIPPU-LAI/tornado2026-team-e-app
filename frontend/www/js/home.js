@@ -54,6 +54,9 @@ const skipOverlayEl = document.getElementById('skip-overlay')
 async function fetchCards(tag) {
   const url = new URL('/api/search/cards', API_BASE)
   if (tag) url.searchParams.set('tag', tag)
+  // 既定(ja)のときはURLを汚さないので付けない
+  const lang = window.getCraftsLang ? window.getCraftsLang() : 'ja'
+  if (lang !== 'ja') url.searchParams.set('lang', lang)
 
   const res = await fetch(url)
   if (!res.ok) {

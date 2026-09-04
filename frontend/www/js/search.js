@@ -109,6 +109,8 @@ async function runSearch() {
   if (state.block) url.searchParams.set('block', state.block)
   if (state.prefecture) url.searchParams.set('prefecture', state.prefecture)
   if (state.tag) url.searchParams.set('tag', state.tag)
+  const lang = window.getCraftsLang ? window.getCraftsLang() : 'ja'
+  if (lang !== 'ja') url.searchParams.set('lang', lang)
 
   try {
     const res = await fetch(url)
