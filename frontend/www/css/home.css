@@ -338,6 +338,8 @@
 .home-main .swipe-actions {
   width: 100%;
   max-width: 380px;
+  flex-wrap: wrap;
+  /* 3つ目のボタン（ジャンルへ戻る）を、下の新しい行に折り返させる */
 }
 
 .swipe-btn {
@@ -351,6 +353,21 @@
   min-width: 115px;
   height: 55px;
   font-size: 1.4rem;
+}
+
+/* ジャンルへ戻るボタン：
+   スマホ版では✖／❤︎の「下」に幅いっぱいの別の行として表示する。
+   order:3 で、DOM上の位置に関係なく必ず一番最後（＝一番下）に回す。 */
+.genre-back-btn {
+  order: 3;
+  width: 100%;
+  min-height: 52px;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
 }
 
 /* このページに限り、アウトラインボタンを赤金トーンに合わせる */
@@ -470,23 +487,43 @@
   .home-main {
     flex: 1;
     flex-direction: row;
+    /* column → row：カードの右側にボタンを並べる形に戻す */
     align-items: center;
     justify-content: center;
-    gap: 56px;
+    gap: 40px;
     padding: 40px 56px;
+    min-height: 0;
+    /* flexアイテムが必要以上に高さを主張して、ボタンが画面外に
+       押し出されてしまうのを防ぐ（flexの初期値min-height:autoの対策） */
   }
 
   .card-stack {
-    max-width: 420px;
-    aspect-ratio: 5 / 7.2;
+    width: 100%;
+    max-width: 640px;
+    /* 横向きカードぶん、横幅を広めに */
+    aspect-ratio: 7.6 / 5;
+    /* 5/7.2（縦長）から反転させて横長に */
+    max-height: calc(100vh - 160px);
+    /* ボタンが横に無くなった分、上下の余白だけを差し引いて上限にする */
     margin: 0;
   }
 
   .home-main .swipe-actions {
     flex-direction: column;
+    /* row → column：カード右側に縦並びで戻す */
     width: auto;
     max-width: none;
     gap: 28px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    /* ボタン自体は縮まないようにする */
+  }
+
+  /* PC版：バツボタンの真上（＝一番最初）に配置し直す */
+  .genre-back-btn {
+    order: -1;
+    width: auto;
+    min-width: 96px;
   }
 
   .swipe-btn {
@@ -497,5 +534,24 @@
   .top-bar {
     padding-left: 40px;
     padding-right: 40px;
+  }
+
+  /* カードの中身：画像を左、説明を右に並べる */
+  .swipe-card-body {
+    flex-direction: row;
+  }
+
+  .swipe-card-image {
+    flex: 0 0 55%;
+    height: 100%;
+  }
+
+  .swipe-card-footer {
+    flex: 1 1 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 28px 32px;
   }
 }

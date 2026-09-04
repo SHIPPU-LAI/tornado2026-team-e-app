@@ -4,7 +4,7 @@
 =================================================================== */
 
 :root {
-    --lg-dark: #453625;
+    --lg-dark: #3d1c17;
     --lg-shu: #c1440e;
     --lg-bg: #faf3e4;
     --lg-cream: #fff8ee;
@@ -74,7 +74,13 @@
 
 .lg-hero {
     padding: 28px 22px 22px;
-    background: linear-gradient(160deg, #6b2c22 100%);
+    /* 濃い色のグラデーションを半透明で重ねることで、模様を薄く覗かせつつ
+     クリーム色の文字がちゃんと読めるコントラストを保っている */
+    background-image:
+        linear-gradient(160deg, rgba(61, 28, 23, 0.88) 0%, rgba(107, 44, 34, 0.88) 100%),
+        url("../images/hero-pattern.png");
+    background-repeat: no-repeat, repeat;
+    background-size: cover, 90px 90px;
     color: var(--lg-cream);
 }
 
@@ -239,6 +245,6 @@
     .lg-hero p,
     .lg-section>*,
     .lg-footer-note {
-        max-width: 480px;
+        max-width: 600px;
     }
 }

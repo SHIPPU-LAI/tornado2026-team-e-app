@@ -168,15 +168,13 @@
         ＋ ときどき強風
   ----------------------------------------------------------- */
 
-  // HTML側の枚数がまた変わっても（要素が見つからなくても）TypeErrorで
-  // 画面全体が固まらないよう、揺れアニメの対象から除外する。
   const LEAVES = [
     { outerEl: leafLeft, upperEl: leafLeftUpper, lowerEl: leafLeftLower, delayMs: 0, swayRight: 1.0, swayLeft: 6, skewRight: -3, skewLeft: 6 },
     { outerEl: leafMidLeft, upperEl: leafMidLeftUpper, lowerEl: leafMidLeftLower, delayMs: 80, swayRight: 0.8, swayLeft: 4.8, skewRight: -2, skewLeft: 4.6 },
     { outerEl: leafCenter, upperEl: leafCenterUpper, lowerEl: leafCenterLower, delayMs: 160, swayRight: 0.5, swayLeft: 3.6, skewRight: -1.5, skewLeft: 3.5 },
     { outerEl: leafMidRight, upperEl: leafMidRightUpper, lowerEl: leafMidRightLower, delayMs: 200, swayRight: 1.6, swayLeft: 4.2, skewRight: -2, skewLeft: 4 },
     { outerEl: leafRight, upperEl: leafRightUpper, lowerEl: leafRightLower, delayMs: 240, swayRight: 2.4, swayLeft: 4.5, skewRight: -2.5, skewLeft: 4.5 },
-  ].filter((l) => l.outerEl && l.upperEl && l.lowerEl);
+  ];
 
   const DURATION_MS = 2400;
   const TURN_POINT = 0.65;
@@ -301,19 +299,16 @@
     // 左側2枚（left, mid-left）は正の角度で左へ開き、
     // 右側2枚（mid-right, right）は負の角度で右へ開く。
     // 中央（center）はどちらにも属さないので、左側と同じ向きで軽く開く。
-    // HTML側の枚数が変わって要素が見つからなくても、TypeErrorでここが
-    // 止まらないよう falsy を除外する（これが止まるとのれん層が
-    // 消えず、クリックを吸い続けてしまう）。
-    for (const el of [leafLeft, leafMidLeft, leafCenter].filter(Boolean)) {
+    for (const el of [leafLeft, leafMidLeft, leafCenter]) {
       el.style.transition = `transform ${OPEN_DURATION} ${OPEN_EASE}`;
       el.style.transform = "rotate(20deg)";
     }
-    for (const el of [leafMidRight, leafRight].filter(Boolean)) {
+    for (const el of [leafMidRight, leafRight]) {
       el.style.transition = `transform ${OPEN_DURATION} ${OPEN_EASE}`;
       el.style.transform = "rotate(-10deg)";
     }
 
-    for (const el of [leafLeftLower, leafMidLeftLower, leafCenterLower, leafMidRightLower, leafRightLower].filter(Boolean)) {
+    for (const el of [leafLeftLower, leafMidLeftLower, leafCenterLower, leafMidRightLower, leafRightLower]) {
       el.style.transition = `-webkit-mask-image 1.6s ease, mask-image 1.6s ease`;
       el.style.webkitMaskImage = FADE_MASK;
       el.style.maskImage = FADE_MASK;

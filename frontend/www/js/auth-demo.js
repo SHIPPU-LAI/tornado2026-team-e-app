@@ -17,7 +17,7 @@
     "use strict";
 
     const STORAGE_KEY = "craftsMatchingIsLoggedIn";
-    const API_BASE = window.location.origin;
+    const API_BASE = "https://noren.zzjjnn2005.workers.dev";
     const BASE = window.SITE_BASE || "../";
 
     function isLoggedIn() {
@@ -63,13 +63,13 @@
       </li>
       <li>
         <a href="#" class="drawer-nav-item">
-          <img src="${BASE}images/profileicon.png" alt="">
+          <img src="${BASE}images/profile.svg" alt="">
           <span>プロフィール</span>
         </a>
       </li>
       <li>
         <a href="#" class="drawer-nav-item" id="logoutBtnDemo">
-          <span class="drawer-nav-icon" aria-hidden="true">🚪</span>
+          <img src="${BASE}images/logout.svg" alt="">
           <span>ログアウト</span>
         </a>
       </li>

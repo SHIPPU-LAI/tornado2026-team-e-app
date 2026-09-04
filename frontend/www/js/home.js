@@ -4,14 +4,13 @@
    ライブラリなしの Pointer Events + CSS変数で実装
 
    カードデータは検索チームのバックエンドAPIから取得する。
-   GET {API_BASE}/api/search/cards?tag=... （tag省略で全件）
-
-   フロントと同じ Worker に同居しているため、同一オリジン。
-   絶対URLではなく現在のオリジンを使う（ローカル確認時のCORS回避にもなる）。
+   GET /api/proxy/search/cards?tag=... （tag省略で全件）
+   ※直接外部APIを叩くとCORSでブロックされるため、
+     自サイトの中継役（functions/api/proxy）を経由する。
    ============================================ */
 
-// 検索バックエンド（チームE / features/search）のベースURL
-const API_BASE = window.location.origin
+// 中継役（Pages Functions）を経由するので、常に自分のオリジンでよい
+const API_BASE = location.origin
 
 // 画面に同時に見せる「重なり」の枚数
 const VISIBLE_STACK = 3
@@ -43,6 +42,64 @@ const TAG_COLOR_LIKE_2 = [163, 43, 43] // #a32b2b
 // APIから取得したカード一覧（先頭が「今表示中」のカード）
 let deck = []
 
+// ============================================================
+// デザイン確認用の仮データ（本番データが空のときだけ使われる）
+// バックエンドのデータが復旧・投入され次第、この仮データは
+// 自動的に使われなくなる（削除の手間は不要）。
+// ============================================================
+const DUMMY_CARDS = [
+  {
+    id: 'dummy-1',
+    name: '九谷焼 色絵の小皿',
+    region: '石川県',
+    block: '中部',
+    description: '九谷五彩と呼ばれる鮮やかな上絵付けが特徴の焼き物。赤・緑・黄・紫・紺青の五色を基調に、余白を活かした大胆な絵柄が描かれる。',
+    tags: ['陶磁器', '食器', '贈り物'],
+    artisan_name: '（仮データ）九谷焼窯元',
+    address: '石川県能美市',
+  },
+  {
+    id: 'dummy-2',
+    name: '会津塗 花塗の椀',
+    region: '福島県',
+    block: '東北',
+    description: '漆を塗ったあと研がずに仕上げる「花塗」という技法。表面の艶と滑らかな質感が特徴で、使うほどに深い光沢が増す。',
+    tags: ['漆器', '食器', '器'],
+    artisan_name: '（仮データ）会津塗職人',
+    address: '福島県会津若松市',
+  },
+  {
+    id: 'dummy-3',
+    name: '琉球ガラス 気泡入りの一輪挿し',
+    region: '沖縄県',
+    block: '九州・沖縄',
+    description: '再生ガラスを溶かして作る、気泡を活かした厚手のガラス工芸。光を通すと涼しげな表情を見せる。',
+    tags: ['ガラス', '花器', '夏'],
+    artisan_name: '（仮データ）琉球ガラス工房',
+    address: '沖縄県那覇市',
+  },
+  {
+    id: 'dummy-4',
+    name: '博多織 献上柄の帯',
+    region: '福岡県',
+    block: '九州・沖縄',
+    description: '縦糸を密にして横糸を打ち込む独特の織り方で、厚みと張りのある生地に仕上がる。献上柄と呼ばれる縞模様が特徴。',
+    tags: ['織物', '絹', '帯'],
+    artisan_name: '（仮データ）博多織元',
+    address: '福岡県福岡市',
+  },
+  {
+    id: 'dummy-5',
+    name: '津軽三味線',
+    region: '青森県',
+    block: '東北',
+    description: '太い棹と厚い胴が特徴で、力強く叩くように奏でる奏法に耐えられるよう頑丈に作られている。',
+    tags: ['楽器', '木工', '音が鳴る'],
+    artisan_name: '（仮データ）三味線職人',
+    address: '青森県弘前市',
+  },
+]
+
 const stackEl = document.getElementById('card-stack')
 // 右（保存）／左（スキップ）スワイプ中に画面端を色付けするオーバーレイ
 const likeOverlayEl = document.getElementById('like-overlay')
@@ -52,7 +109,7 @@ const skipOverlayEl = document.getElementById('skip-overlay')
 // tag を渡すと、そのタグを含むカードだけに絞り込まれる（サーバー側でフィルタ）。
 // 省略時は全件（＝「おまかせ」）。
 async function fetchCards(tag) {
-  const url = new URL('/api/search/cards', API_BASE)
+  const url = new URL('/api/proxy/search/cards', API_BASE)
   if (tag) url.searchParams.set('tag', tag)
 
   const res = await fetch(url)
@@ -112,7 +169,7 @@ function createCardElement(card) {
     <div class="swipe-card-body">
       <div class="swipe-card-image${imageClass}" ${imageStyle}></div>
       <div class="swipe-card-footer">
-        <h3 class="swipe-card-title">${card.is_dummy ? '<span class="stat-badge">サンプル</span>' : ''}${card.name}</h3>
+        <h3 class="swipe-card-title">${card.name}</h3>
         <p class="swipe-card-teaser">${makeTeaser(card.description)}</p>
       </div>
     </div>
@@ -278,32 +335,9 @@ function attachDragHandlers(el, card) {
   el.addEventListener('pointercancel', onPointerUp)
 }
 
-// 「気になる」を保存する（POST /api/introduce/user/:id/like はトグルAPI）。
-// 未ログインなら401が返るので、無言で失敗させずログインへ誘導する。
-async function likeCard(id) {
-  try {
-    const res = await fetch(new URL(`/api/introduce/user/${id}/like`, API_BASE), {
-      method: 'POST',
-      credentials: 'include',
-    })
-    if (res.status === 401) {
-      const base = window.SITE_BASE || '../'
-      if (confirm('「気になる」を保存するにはログインが必要です。ログイン画面へ移動しますか？')) {
-        location.href = `${base}html/login.html`
-      }
-      return
-    }
-    if (!res.ok) throw new Error(`いいねに失敗しました (status: ${res.status})`)
-  } catch (err) {
-    console.error(err)
-  }
-}
-
 // ボタン操作 or ドラッグ確定時、共通で呼ばれる「確定」処理
 function commitSwipe(el, card, action) {
   el.classList.add(action === 'like' ? 'fly-right' : 'fly-left')
-
-  if (action === 'like') likeCard(card.id)
 
   // アニメーション終了を待ってからカード（タグごと）を取り除き、次を繰り上げる。
   // 次のカードは renderStack() が新しく作る別要素なので、
@@ -311,6 +345,9 @@ function commitSwipe(el, card, action) {
   el.addEventListener(
     'transitionend',
     () => {
+      // ※このバックエンドには今のところ「スワイプ結果の保存」用のAPIが
+      //   無いため、ここではローカルの表示上だけデッキから外している。
+      //   保存用エンドポイントができたら、ここでfetch(POST)する。
       deck.shift()
       renderStack()
     },
@@ -389,8 +426,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (err) {
     console.error(err)
-    stackEl.innerHTML = '<p class="empty-state">カードの読み込みに失敗しました</p>'
-    return
+    // 取得自体に失敗した場合も、デザイン確認用の仮データを表示する
+    deck = DUMMY_CARDS
+  }
+
+  // 本番データが0件（今はデータを消してある状態など）の場合も、
+  // デザイン確認用の仮データを表示する
+  if (deck.length === 0) {
+    deck = DUMMY_CARDS
   }
 
   renderStack()

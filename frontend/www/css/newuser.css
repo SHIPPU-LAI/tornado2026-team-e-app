@@ -6,7 +6,7 @@
 =================================================================== */
 
 :root {
-    --nu-dark: #453625;
+    --nu-dark: #3d1c17;
     --nu-shu: #c1440e;
     --nu-shu-deep: #8f2e08;
     --nu-bg: #faf3e4;
@@ -77,7 +77,13 @@
 
 .nu-hero {
     padding: 36px 22px 30px;
-    background: linear-gradient(160deg, var(--nu-dark) 0%, #6b2c22 100%);
+    /* 濃い色のグラデーションを半透明で重ねることで、模様を薄く覗かせつつ
+     クリーム色の文字がちゃんと読めるコントラストを保っている */
+    background-image:
+        linear-gradient(160deg, rgba(61, 28, 23, 0.88) 0%, rgba(107, 44, 34, 0.88) 100%),
+        url("../images/hero-pattern.png");
+    background-repeat: no-repeat, repeat;
+    background-size: cover, 90px 90px;
     color: var(--nu-cream);
 }
 
@@ -144,6 +150,37 @@
     align-items: center;
     justify-content: center;
     font-size: 1.7rem;
+}
+
+/* 元画像の色に関わらず、マスク（型抜き）で狙った赤茶色に塗り替える。
+   background-color の部分の色を変えれば、他の色にも変更できる。
+   円(56px)の中に収まるよう、28pxに縮小している。 */
+.nu-feature-icon-glyph {
+    display: block;
+    width: 28px;
+    height: 28px;
+    background-color: var(--nu-shu-deep);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.nu-feature-icon-glyph--search {
+    -webkit-mask-image: url("../images/search_icon.png");
+    mask-image: url("../images/search_icon.png");
+}
+
+.nu-feature-icon-glyph--favorite {
+    -webkit-mask-image: url("../images/favoriteicon.png");
+    mask-image: url("../images/favoriteicon.png");
+}
+
+.nu-feature-icon-glyph--profile {
+    -webkit-mask-image: url("../images/profileicon.png");
+    mask-image: url("../images/profileicon.png");
 }
 
 .nu-feature-body h3 {

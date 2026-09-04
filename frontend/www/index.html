@@ -63,11 +63,9 @@
           <div class="noren-leaf noren-leaf--left" id="leaf-left">
             <div class="noren-leaf-upper" id="leaf-left-upper">
               <span class="noren-pattern noren-pattern--seamA-left"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-left2"></span>
             </div>
             <div class="noren-leaf-lower" id="leaf-left-lower">
               <span class="noren-pattern noren-pattern--seamC-left"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-left"></span>
             </div>
           </div>
 
@@ -83,13 +81,10 @@
             <div class="noren-leaf-upper" id="leaf-center-upper">
               <span class="noren-pattern noren-pattern--seamA-right"></span>
               <span class="noren-pattern noren-pattern--seamB-left"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-right2"></span>
             </div>
             <div class="noren-leaf-lower" id="leaf-center-lower">
               <span class="noren-pattern noren-pattern--seamB-left-lower"></span>
               <span class="noren-pattern noren-pattern--seamC-right"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamE-left"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamD-right"></span>
             </div>
           </div>
 
@@ -105,17 +100,25 @@
             </div>
             <div class="noren-leaf-lower" id="leaf-right-lower">
               <span class="noren-pattern noren-pattern--seamB-right-lower"></span>
-              <span class="noren-cloud-pattern noren-cloud-pattern--seamE-right"></span>
             </div>
           </div>
 
         </div>
+
+        <!-- 暖簾の手前に固定される、ゆらゆら動く黄色い雲。
+             パネルの継ぎ目とは無関係に、1枚の画像として暖簾全体の
+             前面に配置する（スマホ版・PC版どちらにも同じく表示）。 -->
+        <span class="noren-floating-cloud noren-floating-cloud--1"></span>
+        <span class="noren-floating-cloud noren-floating-cloud--2"></span>
       </div>
 
     </main>
 
     <footer class="genre-footer" id="genre-footer">
-      <button class="btn btn-outline genre-login-btn" id="omakase-btn">おまかせ</button>
+      <div class="genre-footer-btn-stack">
+        <a href="./html/login.html" class="btn btn-outline genre-footer-btn genre-footer-btn--login" id="genre-login-btn">ログイン</a>
+        <button class="btn btn-outline genre-footer-btn genre-footer-btn--omakase" id="omakase-btn">おまかせ</button>
+      </div>
     </footer>
 
   </div>
