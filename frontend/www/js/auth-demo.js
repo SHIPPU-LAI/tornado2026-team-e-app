@@ -47,9 +47,11 @@
     `;
     }
 
-    // 「プロフィール」の項目は、遷移先のページ自体が無く、出す内容も
-    // 未決のためいったん外してある。画面ができたら<li>を戻すだけで復活する
-    // （images/profileicon.pngは残してあるので削除しないこと）。
+    // 「プロフィール」の項目は、フロントの本番画面ができるまでドロワーには
+    // 出していない。バックエンド側に仮のページが GET /profile にある
+    // （features/auth/profile-ui.js）。復活させるときは<li>を戻し、
+    // hrefを本番画面に向ける（暫定で/profileに向けてもよい）。
+    // images/profileicon.pngは残してあるので削除しないこと。
     function loggedInNavHTML() {
         return `
       <li>
