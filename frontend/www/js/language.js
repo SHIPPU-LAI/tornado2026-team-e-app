@@ -110,6 +110,7 @@
     "都道府県で絞り込む": "Filter by prefecture",
     "タグで絞り込む": "Filter by tag",
     "検索中…": "Searching…",
+    "0件見つかりました": "0 results found",
     "条件に合う工芸品が見つかりませんでした。条件を減らしてお試しください。":
       "No matching items found. Try removing some filters.",
     "検索に失敗しました。時間をおいて再度お試しください。":
