@@ -19,7 +19,7 @@
 
     const STORAGE_KEY = "craftsMatchingIsLoggedIn";
     const ROLE_KEY = "craftsMatchingRole"; // login.js が保存する「artisan」または「user」
-    const API_BASE = "https://noren.zzjjnn2005.workers.dev";
+    const API_BASE = window.location.origin;
     const BASE = window.SITE_BASE || "../";
 
     function isLoggedIn() {
@@ -54,11 +54,6 @@
     }
 
 
-    // 「プロフィール」の項目は、フロントの本番画面ができるまでドロワーには
-    // 出していない。バックエンド側に仮のページが GET /profile にある
-    // （features/auth/profile-ui.js）。復活させるときは<li>を戻し、
-    // hrefを本番画面に向ける（暫定で/profileに向けてもよい）。
-    // images/profileicon.pngは残してあるので削除しないこと。
     function loggedInNavHTML() {
         // 職人アカウントでログインしているときだけ「工芸品を登録する」を追加する
         const registerItemHTML = isArtisan()
@@ -87,13 +82,13 @@
       ${registerItemHTML}
       <li>
         <a href="${BASE}html/profile.html" class="drawer-nav-item">
-          <img src="${BASE}images/profile.svg" alt="">
+          <img src="${BASE}images/profileicon.png" alt="">
           <span>プロフィール</span>
         </a>
       </li>
       <li>
         <a href="#" class="drawer-nav-item" id="logoutBtnDemo">
-          <img src="${BASE}images/logout.svg" alt="">
+          <span class="drawer-nav-icon" aria-hidden="true">🚪</span>
           <span>ログアウト</span>
         </a>
       </li>
