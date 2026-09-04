@@ -3,10 +3,10 @@
    バックエンド（検索チーム / features/search）の
      GET /api/search/facets   … 絞り込み候補（地方・都道府県・タグ）
      GET /api/search          … 段階式検索（q, block, prefecture, tag）
-   を使う。
+   を使う。フロントと同じ Worker に同居しているため、同一オリジン。
 =================================================================== */
 
-const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
+const API_BASE = window.location.origin
 
 // 現在の絞り込み状態
 const state = {

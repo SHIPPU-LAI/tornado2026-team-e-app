@@ -5,10 +5,13 @@
 
    カードデータは検索チームのバックエンドAPIから取得する。
    GET {API_BASE}/api/search/cards?tag=... （tag省略で全件）
+
+   フロントと同じ Worker に同居しているため、同一オリジン。
+   絶対URLではなく現在のオリジンを使う（ローカル確認時のCORS回避にもなる）。
    ============================================ */
 
 // 検索バックエンド（チームE / features/search）のベースURL
-const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
+const API_BASE = window.location.origin
 
 // 画面に同時に見せる「重なり」の枚数
 const VISIBLE_STACK = 3

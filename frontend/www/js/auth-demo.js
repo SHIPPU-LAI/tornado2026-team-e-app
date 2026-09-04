@@ -17,7 +17,7 @@
     "use strict";
 
     const STORAGE_KEY = "craftsMatchingIsLoggedIn";
-    const API_BASE = "https://noren.zzjjnn2005.workers.dev";
+    const API_BASE = window.location.origin;
     const BASE = window.SITE_BASE || "../";
 
     function isLoggedIn() {
