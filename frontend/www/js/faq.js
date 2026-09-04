@@ -19,7 +19,7 @@
 
     const STORAGE_KEY = "craftsMatchingIsLoggedIn";
     const ROLE_KEY = "craftsMatchingRole"; // login.js が保存する「artisan」または「user」
-    const API_BASE = "https://noren.zzjjnn2005.workers.dev";
+    const API_BASE = location.origin;
     const BASE = window.SITE_BASE || "../";
 
     function isLoggedIn() {
@@ -81,13 +81,13 @@
       ${registerItemHTML}
       <li>
         <a href="${BASE}html/profile.html" class="drawer-nav-item">
-          <img src="${BASE}images/profile.svg" alt="">
+          <img src="${BASE}images/profileicon.png" alt="">
           <span>プロフィール</span>
         </a>
       </li>
       <li>
         <a href="#" class="drawer-nav-item" id="logoutBtnDemo">
-          <img src="${BASE}images/logout.svg" alt="">
+          <span class="drawer-nav-icon" aria-hidden="true">🚪</span>
           <span>ログアウト</span>
         </a>
       </li>

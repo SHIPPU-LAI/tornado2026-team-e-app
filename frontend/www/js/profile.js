@@ -6,7 +6,7 @@
    同一オリジン。中継役は不要で、直接叩ける（AGENTS.md / a4306c1 参照）。
 =================================================================== */
 
-const AUTH_API_BASE = 'https://noren.zzjjnn2005.workers.dev' // login.js と同じ
+const AUTH_API_BASE = location.origin // login.js と同じ
 const PROXY_BASE = location.origin // introduce系も同一オリジンで直接叩く
 
 const STORAGE_KEY = 'craftsMatchingIsLoggedIn' // auth-demo.js / login.js と共有
