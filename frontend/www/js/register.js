@@ -66,6 +66,13 @@ async function checkArtisanLogin() {
 
 // ========================================================
 // ① AI下書きサポート
+//
+// POST /api/introduce/artisan/compose は質問が5つ固定（設計書の決定
+// 事項。features/introduce/prompt.js 参照）で、answers は位置で
+// Q1〜Q5に割り当てられる。register.htmlはまだ4問しか用意していない
+// ため、ここで暫定的に5問目を追加し、文言も契約どおりに揃えている。
+// HTML側が5問に対応したら、このラベル差し替え・5問目追加のコードは
+// 不要になる（削除してよい）。
 // ========================================================
 function setupDraftSupport() {
     const composeBtn = document.getElementById('draft-compose-btn')
@@ -76,7 +83,88 @@ function setupDraftSupport() {
     const nameInput = document.getElementById('name')
     const descriptionInput = document.getElementById('description')
 
-    const questionIds = ['draft-q0', 'draft-q1', 'draft-q2', 'draft-q3']
+    // docs/フロントエンド向けAPI.md に書かれている契約どおりの文言・順番
+    const QUESTION_LABELS = [
+        '何を作って（演じて）いますか。ひとことで。',
+        'その中で、いちばん手間がかかるのはどこですか。',
+        'そこは、ひとりでできるまでどれくらいかかりましたか。',
+        'よそと違うと思うのは、どんなところですか。',
+        'はじめて見る人に、どこを見てほしいですか。',
+    ]
+
+    const draftBox = document.querySelector('.reg-draft-box')
+    const q3Block = document.getElementById('draft-q3').closest('.reg-draft-question')
+
+    // 既存4問のラベルを契約の文言に差し替える
+    ;['draft-q0', 'draft-q1', 'draft-q2', 'draft-q3'].forEach((id, i) => {
+        const label = draftBox.querySelector(`label[for="${id}"]`)
+        if (label) label.textContent = QUESTION_LABELS[i]
+    })
+
+    // 5問目が無ければ、4問目のブロックをcloneNodeして作る
+    // （手書きで組むとCSSが当たらないため。将来HTML側に足された場合は
+    // 二重に作らない）
+    if (!document.getElementById('draft-q4')) {
+        const q4Block = q3Block.cloneNode(true)
+        const q4Label = q4Block.querySelector('label')
+        const q4Textarea = q4Block.querySelector('textarea')
+        q4Label.setAttribute('for', 'draft-q4')
+        q4Label.textContent = QUESTION_LABELS[4]
+        q4Textarea.id = 'draft-q4'
+        q4Textarea.value = ''
+        q3Block.insertAdjacentElement('afterend', q4Block)
+    }
+
+    const questionIds = ['draft-q0', 'draft-q1', 'draft-q2', 'draft-q3', 'draft-q4']
+
+    // 掘り下げ（followup）は1周だけ。2回目以降はこのフラグで打ち切る
+    let followupAsked = false
+    let followupBlock = null
+    let lastDraftEn = null
+
+    function removeFollowupBlock() {
+        if (followupBlock) {
+            followupBlock.remove()
+            followupBlock = null
+        }
+    }
+
+    // 聞き返しの質問欄を、質問ブロックと同じ見た目でその場に作る
+    function showFollowupQuestion(followup, answers) {
+        removeFollowupBlock()
+        followupBlock = q3Block.cloneNode(true)
+        const label = followupBlock.querySelector('label')
+        const textarea = followupBlock.querySelector('textarea')
+        label.removeAttribute('for')
+        label.textContent = followup.question
+        textarea.id = 'draft-followup-answer'
+        textarea.value = ''
+        draftBox.insertBefore(followupBlock, composeBtn)
+
+        setStatus(statusEl, 'もう少し詳しく教えてください。答えたら、もう一度「下書きを作成する」を押してください。', 'ok')
+
+        // 次にcomposeBtnが押されたときは、この回答をfollowupsに載せて呼び直す
+        composeBtn.dataset.pendingFollowupIndex = String(followup.index)
+        composeBtn.dataset.pendingFollowupQuestion = followup.question
+    }
+
+    function applyResult(data) {
+        // ja は3文の配列で返る想定。文字列で返る可能性のフォールバックも入れておく
+        const jaText = Array.isArray(data?.ja) ? data.ja.join('') : (typeof data?.ja === 'string' ? data.ja : '')
+
+        if (!jaText) {
+            setStatus(statusEl, 'AIの下書きを作れませんでした。お手数ですが②に直接ご記入ください。', 'error')
+            return
+        }
+
+        // en も受け取っておく。登録時にdescription_enとして一緒に送れば、
+        // そのカードは最初から英訳付きになる（translate-missingを回す手間が減る）
+        lastDraftEn = Array.isArray(data?.en) ? data.en.join('') : (typeof data?.en === 'string' ? data.en : null)
+
+        resultTextEl.textContent = jaText
+        resultEl.classList.add('is-visible')
+        setStatus(statusEl, '下書きができました。内容を確認して、③に使ってください。', 'ok')
+    }
 
     composeBtn.addEventListener('click', async () => {
         const name = nameInput.value.trim()
@@ -88,6 +176,17 @@ function setupDraftSupport() {
 
         const answers = questionIds.map((id) => document.getElementById(id).value.trim())
 
+        const followups = []
+        if (followupBlock) {
+            const answerEl = document.getElementById('draft-followup-answer')
+            followups.push({
+                index: Number(composeBtn.dataset.pendingFollowupIndex),
+                question: composeBtn.dataset.pendingFollowupQuestion,
+                answer: answerEl ? answerEl.value.trim() : '',
+            })
+            followupAsked = true
+        }
+
         setStatus(statusEl, '下書きを作成しています…')
         composeBtn.disabled = true
 
@@ -95,20 +194,17 @@ function setupDraftSupport() {
             const data = await api('/api/introduce/artisan/compose', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ name, answers, followups: [] }),
+                body: JSON.stringify({ name, answers, followups }),
             })
 
-            // レスポンスの形が正確に分からないため、いくつかの候補を順に見る
-            const draft = data?.description || data?.text || data?.result || data?.draft || ''
-
-            if (!draft) {
-                setStatus(statusEl, '下書きを作成しましたが、内容を読み取れませんでした。お手数ですが③に直接ご記入ください。', 'error')
+            if (data?.followup && !followupAsked) {
+                showFollowupQuestion(data.followup, answers)
                 return
             }
 
-            resultTextEl.textContent = draft
-            resultEl.classList.add('is-visible')
-            setStatus(statusEl, '下書きができました。内容を確認して、③に使ってください。', 'ok')
+            // 掘り下げ済み、またはfollowupが無い場合はここで確定させる
+            removeFollowupBlock()
+            applyResult(data)
         } catch (err) {
             console.error(err)
             setStatus(statusEl, err.message, 'error')
@@ -121,6 +217,9 @@ function setupDraftSupport() {
         descriptionInput.value = resultTextEl.textContent
         document.getElementById('description').scrollIntoView({ behavior: 'smooth', block: 'center' })
     })
+
+    // 送信時に使うため、AIが作った英訳（無ければnull）を返す関数
+    return () => lastDraftEn
 }
 
 // ========================================================
@@ -350,7 +449,7 @@ function setupImageUpload() {
 // ========================================================
 // フォーム送信
 // ========================================================
-function setupFormSubmit(getTags, getImageKeys) {
+function setupFormSubmit(getTags, getImageKeys, getDraftEn) {
     const form = document.getElementById('reg-form')
     const submitBtn = document.getElementById('submit-btn')
     const statusEl = document.getElementById('submit-status')
@@ -378,6 +477,12 @@ function setupFormSubmit(getTags, getImageKeys) {
             history: document.getElementById('history').value.trim() || null,
             tags: getTags(),
             image_keys: getImageKeys(),
+        }
+
+        // AIが作った英訳があれば一緒に送る（無ければ送らない。translate-missingで後から埋まる）
+        const draftEn = getDraftEn()
+        if (draftEn) {
+            payload.description_en = draftEn
         }
 
         const lat = document.getElementById('lat').value
@@ -417,11 +522,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isArtisan = await checkArtisanLogin()
     if (!isArtisan) return
 
-    setupDraftSupport()
+    const getDraftEn = setupDraftSupport()
     setupAddressSupport()
     const getTags = setupTagInput()
     const getImageKeys = setupImageUpload()
-    setupFormSubmit(getTags, getImageKeys)
+    setupFormSubmit(getTags, getImageKeys, getDraftEn)
 })
 
 // ---- ハンバーガーメニュー（ドロワー）の開閉設定 ----
