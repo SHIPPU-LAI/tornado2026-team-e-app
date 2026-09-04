@@ -5,7 +5,7 @@
 =================================================================== */
 
 :root {
-    --search-dark: #453625;
+    --search-dark: #3d1c17;
     --search-shu: #c1440e;
     --search-shu-deep: #8f2e08;
     --search-bg: #faf3e4;
@@ -75,7 +75,10 @@
 
 .search-hero {
     padding: 28px 22px 20px;
-    background: linear-gradient(160deg, var(--search-dark) 0%, #6b2c22 100%);
+    background-image: url("../images/search-hero-pattern.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: var(--search-cream);
 }
 
