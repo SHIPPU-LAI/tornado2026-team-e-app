@@ -3,9 +3,12 @@
    ホーム画面：カードのスワイプ（気になる／スキップ）を
    ライブラリなしの Pointer Events + CSS変数で実装
 
-   カードデータは Cloudflare D1 を参照する API
-   （GET /api/cards）から取得する。
+   カードデータは検索チームのバックエンドAPIから取得する。
+   GET {API_BASE}/api/search/cards?tag=... （tag省略で全件）
    ============================================ */
+
+// 検索バックエンド（チームE / features/search）のベースURL
+const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
 
 // 画面に同時に見せる「重なり」の枚数
 const VISIBLE_STACK = 3
@@ -34,7 +37,7 @@ const TAG_COLOR_DEFAULT_2 = [31, 79, 160] // #1f4fa0
 const TAG_COLOR_LIKE_1 = [232, 96, 60] // #e8603c
 const TAG_COLOR_LIKE_2 = [163, 43, 43] // #a32b2b
 
-// D1から取得したカード一覧（先頭が「今表示中」のカード）
+// APIから取得したカード一覧（先頭が「今表示中」のカード）
 let deck = []
 
 const stackEl = document.getElementById('card-stack')
@@ -42,22 +45,43 @@ const stackEl = document.getElementById('card-stack')
 const likeOverlayEl = document.getElementById('like-overlay')
 const skipOverlayEl = document.getElementById('skip-overlay')
 
-// ---- D1バックエンドからカード一覧を取得 ----
-async function fetchCards() {
-  const res = await fetch('/api/cards')
+// ---- バックエンドAPIからカード一覧を取得 ----
+// tag を渡すと、そのタグを含むカードだけに絞り込まれる（サーバー側でフィルタ）。
+// 省略時は全件（＝「おまかせ」）。
+async function fetchCards(tag) {
+  const url = new URL('/api/search/cards', API_BASE)
+  if (tag) url.searchParams.set('tag', tag)
+
+  const res = await fetch(url)
   if (!res.ok) {
     throw new Error(`カード取得に失敗しました (status: ${res.status})`)
   }
-  return res.json()
+  const data = await res.json()
+  // /api/search/cards の items はカードオブジェクトそのもの
+  return Array.isArray(data.items) ? data.items : []
 }
 
-// 画像URLが登録されていればそれを使い、無ければ従来のグラデーション
-// プレースホルダー（swipe-card-image--1〜5）にフォールバックする
-function resolveImageClassAndStyle(card) {
-  if (card.imageUrl) {
-    return { className: '', style: `style="background-image:url('${card.imageUrl}')"` }
+// カードのidは数値ではなく文字列（UUIDや "c001" など）のため、
+// 文字列から安定したパレット番号（1〜5）を作る簡易ハッシュ。
+function paletteIndexFor(id) {
+  const str = String(id)
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0
   }
-  const paletteIndex = ((card.id - 1) % 5) + 1
+  return (hash % 5) + 1
+}
+
+// description（長文）からカード表面用の短い紹介文を作る
+function makeTeaser(description) {
+  if (!description) return ''
+  const MAX = 46
+  return description.length > MAX ? `${description.slice(0, MAX)}…` : description
+}
+
+// 画像URLは今のAPIには無いため、常にグラデーションのプレースホルダーを使う
+function resolveImageClassAndStyle(card) {
+  const paletteIndex = paletteIndexFor(card.id)
   return { className: ` swipe-card-image--${paletteIndex}`, style: '' }
 }
 
@@ -71,17 +95,22 @@ function createCardElement(card) {
 
   const { className: imageClass, style: imageStyle } = resolveImageClassAndStyle(card)
 
+  // 上部の3つのタグ：①主なジャンル（tagsの先頭） ②都道府県（無ければ地方） ③地方（①と重複しなければ）
+  const category = (card.tags && card.tags[0]) || '工芸'
+  const region = card.region || card.block || '―'
+  const era = card.block && card.block !== region ? card.block : (card.tags && card.tags[1]) || '―'
+
   el.innerHTML = `
     <div class="swipe-card-tags">
-      <span class="home-tab-pill">${card.category}</span>
-      <span class="home-tab-pill">${card.region}</span>
-      <span class="home-tab-pill">${card.era}</span>
+      <span class="home-tab-pill">${category}</span>
+      <span class="home-tab-pill">${region}</span>
+      <span class="home-tab-pill">${era}</span>
     </div>
     <div class="swipe-card-body">
       <div class="swipe-card-image${imageClass}" ${imageStyle}></div>
       <div class="swipe-card-footer">
         <h3 class="swipe-card-title">${card.name}</h3>
-        <p class="swipe-card-teaser">${card.teaser}</p>
+        <p class="swipe-card-teaser">${makeTeaser(card.description)}</p>
       </div>
     </div>
   `
@@ -256,12 +285,9 @@ function commitSwipe(el, card, action) {
   el.addEventListener(
     'transitionend',
     () => {
-      // スワイプ結果をD1へ記録する場合はここでAPIに送信する
-      // 例）fetch(`/api/cards/${card.id}/swipe`, {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify({ action }),
-      //     })
+      // ※このバックエンドには今のところ「スワイプ結果の保存」用のAPIが
+      //   無いため、ここではローカルの表示上だけデッキから外している。
+      //   保存用エンドポイントができたら、ここでfetch(POST)する。
       deck.shift()
       renderStack()
     },
@@ -325,9 +351,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
   }
 
-  // --- 3. D1からカード一覧を取得してから、最初の描画を行う ---
+  // --- 3. APIからカード一覧を取得してから、最初の描画を行う ---
+  // ジャンル選択画面（index.html）から ?genre=タグ名 が渡っていれば、
+  // そのタグを含むカードだけをサーバー側で絞り込んで取得する。
+  // 「おまかせ」で来た場合（genre無し）は全件。
+  const params = new URLSearchParams(location.search)
+  const genre = params.get('genre') || ''
+
   try {
-    deck = await fetchCards()
+    deck = await fetchCards(genre)
+    // 指定ジャンルのカードが1件も無かった場合は、全件（おまかせ相当）にフォールバックする
+    if (genre && deck.length === 0) {
+      deck = await fetchCards()
+    }
   } catch (err) {
     console.error(err)
     stackEl.innerHTML = '<p class="empty-state">カードの読み込みに失敗しました</p>'

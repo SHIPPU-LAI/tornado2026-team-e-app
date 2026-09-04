@@ -20,9 +20,9 @@
         <a href="../html/favorites.html" class="icon-btn" id="favoritesBtn" aria-label="お気に入り">
           <img src="../images/Grocery Shelf.png" alt="">
         </a>
-        <button class="icon-btn" aria-label="検索">
+        <a href="../html/search.html" class="icon-btn" aria-label="検索">
           <img src="../images/search_icon.png" alt="">
-        </button>
+        </a>
       </div>
     </header>
 
@@ -48,26 +48,6 @@
       </div>
 
     </main>
-
-    <!-- 下部ナビゲーション（参考用の骨組み）
-    <nav class="bottom-nav">
-      <button class="nav-item active">
-        <span class="nav-icon">⌂</span>
-        <span>ホーム</span>
-      </button>
-      <button class="nav-item">
-        <span class="nav-icon">🔍</span>
-        <span>検索</span>
-      </button>
-      <button class="nav-item">
-        <span class="nav-icon">♡</span>
-        <span>いいね</span>
-      </button>
-      <button class="nav-item">
-        <span class="nav-icon">☺</span>
-        <span>プロフィール</span>
-      </button>
-    </nav> -->
 
   </div>
 
@@ -122,7 +102,7 @@
 
     </div>
   </div>
-<!-- 背景の黒幕 -->
+  <!-- 背景の黒幕 -->
   <div class="menu-overlay" id="menuOverlay"></div>
 
   <!-- ハンバーガーメニュー本体 -->
@@ -130,23 +110,21 @@
     <div class="drawer-header">
       <button class="close-btn" id="closeMenuBtn">✕</button>
     </div>
-    <ul class="drawer-nav-list">
-      <li><img src="../images/home.png" alt=""><a href="../html/home.html" class="drawer-nav-item active">ホーム</a></li>
-      <li><img src="../images/login.png" alt="" style="width: 12%;"><a href="#" class="drawer-nav-item">ログイン</a></li>
-      <li><img src="../images/newuser.png" alt="" style="width: 10%;"><a href="#" class="drawer-nav-item">初めてご利用の方へ</a></li>
-    </ul>
-
+    <!-- ログイン状態に応じてJS（auth-demo.js）がここを書き換える -->
+    <ul class="drawer-nav-list" id="drawerNavList"></ul>
 
     <ul class="drawer-nav-list-bottom">
       <li>
-        <a href="#" class="drawer-nav-item active">
+        <a href="#" class="drawer-nav-item" id="languageBtn">
           <img src="../images/langage.png" alt="">
           <span>言語設定</span>
         </a>
       </li>
-      <li style="display: flex;">
-        <p style="width: fit-content; color: white; font-size: 1.5rem; margin: 0; line-height: 60px;"><small>あ</small>あ</p>
-        <a href="#" class="drawer-nav-item">文字の大きさ</a>
+      <li>
+        <a href="#" class="drawer-nav-item" id="fontSizeBtn">
+          <span class="drawer-nav-icon" aria-hidden="true">Aa</span>
+          <span>文字の大きさ</span>
+        </a>
       </li>
       <li>
         <a href="#" class="drawer-nav-item">
@@ -156,6 +134,36 @@
       </li>
     </ul>
   </nav>
+
+  <!-- 文字の大きさ設定ポップアップ -->
+  <div class="fontsize-modal-overlay" id="fontsizeModalOverlay">
+    <div class="fontsize-modal" role="dialog" aria-modal="true">
+      <div class="fontsize-modal-header">
+        <h2>文字の大きさ</h2>
+        <button class="fontsize-modal-close" id="fontsizeModalClose" aria-label="閉じる">✕</button>
+      </div>
+      <div class="fontsize-option-list" id="fontsizeOptionList"></div>
+    </div>
+  </div>
+
+  <!-- 言語設定ポップアップ -->
+  <div class="language-modal-overlay" id="languageModalOverlay">
+    <div class="language-modal" role="dialog" aria-modal="true">
+      <div class="language-modal-header">
+        <h2>言語設定</h2>
+        <button class="language-modal-close" id="languageModalClose" aria-label="閉じる">✕</button>
+      </div>
+      <p class="language-modal-note">
+        言語を選ぶと、次回からその言語で表示されるよう準備を進めます。現在は日本語の内容のみのご案内となります。
+      </p>
+      <div class="language-option-list" id="languageOptionList"></div>
+    </div>
+  </div>
+
+  <script>window.SITE_BASE = '../';</script>
+  <script src="../js/font-size.js"></script>
+  <script src="../js/language.js"></script>
+  <script src="../js/auth-demo.js"></script>
   <script src="../js/home.js"></script>
   <script src="../js/card-modal.js"></script>
 </body>

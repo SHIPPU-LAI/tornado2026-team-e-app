@@ -9,7 +9,7 @@
   const genreShell = document.getElementById("genre-shell");
   const norenLayer = document.getElementById("noren-layer");
   const scene = document.getElementById("genre-scene");
-  const loginBtn = document.getElementById("login-btn");
+  const omakaseBtn = document.getElementById("omakase-btn");
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -21,9 +21,20 @@
   const leafLeftUpper = document.getElementById("leaf-left-upper");
   const leafLeftLower = document.getElementById("leaf-left-lower");
 
+  // PC版（幅1024px以上）でだけ表示される追加パネル。
+  // スマホ版はCSS側でdisplay:noneのため、常にDOMに存在していても
+  // アニメーションのコストはごくわずか（見た目に影響しない）。
+  const leafMidLeft = document.getElementById("leaf-mid-left");
+  const leafMidLeftUpper = document.getElementById("leaf-mid-left-upper");
+  const leafMidLeftLower = document.getElementById("leaf-mid-left-lower");
+
   const leafCenter = document.getElementById("leaf-center");
   const leafCenterUpper = document.getElementById("leaf-center-upper");
   const leafCenterLower = document.getElementById("leaf-center-lower");
+
+  const leafMidRight = document.getElementById("leaf-mid-right");
+  const leafMidRightUpper = document.getElementById("leaf-mid-right-upper");
+  const leafMidRightLower = document.getElementById("leaf-mid-right-lower");
 
   const leafRight = document.getElementById("leaf-right");
   const leafRightUpper = document.getElementById("leaf-right-upper");
@@ -64,7 +75,9 @@
 
   const LEAVES = [
     { outerEl: leafLeft, upperEl: leafLeftUpper, lowerEl: leafLeftLower, delayMs: 0, swayRight: 1.0, swayLeft: 6, skewRight: -3, skewLeft: 6 },
-    { outerEl: leafCenter, upperEl: leafCenterUpper, lowerEl: leafCenterLower, delayMs: 120, swayRight: 0.5, swayLeft: 3.6, skewRight: -1.5, skewLeft: 3.5 },
+    { outerEl: leafMidLeft, upperEl: leafMidLeftUpper, lowerEl: leafMidLeftLower, delayMs: 80, swayRight: 0.8, swayLeft: 4.8, skewRight: -2, skewLeft: 4.6 },
+    { outerEl: leafCenter, upperEl: leafCenterUpper, lowerEl: leafCenterLower, delayMs: 160, swayRight: 0.5, swayLeft: 3.6, skewRight: -1.5, skewLeft: 3.5 },
+    { outerEl: leafMidRight, upperEl: leafMidRightUpper, lowerEl: leafMidRightLower, delayMs: 200, swayRight: 1.6, swayLeft: 4.2, skewRight: -2, skewLeft: 4 },
     { outerEl: leafRight, upperEl: leafRightUpper, lowerEl: leafRightLower, delayMs: 240, swayRight: 2.4, swayLeft: 4.5, skewRight: -2.5, skewLeft: 4.5 },
   ];
 
@@ -188,14 +201,19 @@
     const OPEN_EASE = "cubic-bezier(0.55, 0, 0.1, 1)";
     const FADE_MASK = "linear-gradient(to bottom, #000 14%, transparent 100%)";
 
-    for (const el of [leafLeft, leafCenter]) {
+    // 左側2枚（left, mid-left）は正の角度で左へ開き、
+    // 右側2枚（mid-right, right）は負の角度で右へ開く。
+    // 中央（center）はどちらにも属さないので、左側と同じ向きで軽く開く。
+    for (const el of [leafLeft, leafMidLeft, leafCenter]) {
       el.style.transition = `transform ${OPEN_DURATION} ${OPEN_EASE}`;
       el.style.transform = "rotate(20deg)";
     }
-    leafRight.style.transition = `transform ${OPEN_DURATION} ${OPEN_EASE}`;
-    leafRight.style.transform = "rotate(-10deg)";
+    for (const el of [leafMidRight, leafRight]) {
+      el.style.transition = `transform ${OPEN_DURATION} ${OPEN_EASE}`;
+      el.style.transform = "rotate(-10deg)";
+    }
 
-    for (const el of [leafLeftLower, leafCenterLower, leafRightLower]) {
+    for (const el of [leafLeftLower, leafMidLeftLower, leafCenterLower, leafMidRightLower, leafRightLower]) {
       el.style.transition = `-webkit-mask-image 1.6s ease, mask-image 1.6s ease`;
       el.style.webkitMaskImage = FADE_MASK;
       el.style.maskImage = FADE_MASK;
@@ -203,15 +221,27 @@
 
     norenLayer.classList.add("is-zooming");
 
+    let norenHidden = false;
+    function hideNoren() {
+      if (norenHidden) return;
+      norenHidden = true;
+      norenLayer.classList.add("is-hidden");
+    }
+
     norenLayer.addEventListener(
       "transitionend",
       (e) => {
         if (e.target === norenLayer && e.propertyName === "transform") {
-          norenLayer.classList.add("is-hidden");
+          hideNoren();
         }
       },
       { once: true }
     );
+
+    // transitionend が何らかの理由で発火しなかった場合の保険。
+    // これが無いと、暖簾レイヤーが見た目上消えていても
+    // クリック・スクロールを吸い続けてしまうことがあった。
+    window.setTimeout(hideNoren, 2200);
   }
 
   norenLayer.addEventListener("click", openNoren);
@@ -227,19 +257,20 @@
   const genreScroll = document.getElementById("genre-scroll");
   const genreTrack = document.getElementById("genre-track");
 
+  // 実際のバックエンド（cards.tags）に存在する値、または
+  // 今後追加予定のジャンル（能楽など）。ボタンのkeyは表示上使わず、
+  // クリック時は label（＝tagsの値）をそのままAPIの ?tag= に渡す。
   const GENRES = {
     toujiki: { label: "陶磁器" },
     shikki: { label: "漆器" },
-    senshoku: { label: "染織" },
+    senshoku: { label: "染物" },
     mokkou: { label: "木工" },
     kinkou: { label: "金工" },
-    garasu: { label: "ガラス工芸" },
+    garasu: { label: "ガラス" },
     washi: { label: "和紙" },
-    take: { label: "竹細工" },
-    ningyou: { label: "人形" },
-    hamono: { label: "刃物" },
-    someomo: { label: "染物" },
+    take: { label: "竹工" },
     nuno: { label: "織物" },
+    gakki: { label: "楽器" },
   };
 
   function renderGenreButtons() {
@@ -257,8 +288,11 @@
 
   renderGenreButtons();
 
+  // home.html側では ?genre=ラベル で受け取り、card.category と
+  // そのまま文字列一致させてフィルタする（キーではなくラベルを渡す）
   function goToGenre(genreKey) {
-    location.href = `html/home.html?genre=${encodeURIComponent(genreKey)}`;
+    const label = GENRES[genreKey]?.label ?? genreKey;
+    location.href = `html/home.html?genre=${encodeURIComponent(label)}`;
   }
 
   genreTrack.addEventListener("click", (event) => {
@@ -326,12 +360,48 @@
 
 
   /* -----------------------------------------------------------
-     4. ログインボタン
+     4. 「おまかせ」ボタン
+        ジャンルを絞らず、home.html にジャンル指定なしで遷移する。
+        home.js側は ?genre= が無ければ全ジャンルのカードを表示する。
   ----------------------------------------------------------- */
 
-  if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
-      location.href = "html/login.html";
+  if (omakaseBtn) {
+    omakaseBtn.addEventListener("click", () => {
+      location.href = "html/home.html";
     });
   }
 })();
+
+// --- 5. ハンバーガーメニュー（ドロワー）の開閉設定 ---
+// ※他ページ（home.js / favorites.js）と同じ処理をこのページにも追加
+const openMenuBtn = document.getElementById('openMenuBtn')
+const closeMenuBtn = document.getElementById('closeMenuBtn')
+const drawerMenu = document.getElementById('drawerMenu')
+const menuOverlay = document.getElementById('menuOverlay')
+
+// メニューを開く
+if (openMenuBtn) {
+  openMenuBtn.addEventListener('click', () => {
+    drawerMenu?.classList.add('is-open')
+    menuOverlay?.classList.add('is-visible')
+    document.body.style.overflow = 'hidden' // 背景スクロールを防止
+  })
+}
+
+// 閉じるボタンで閉じる
+if (closeMenuBtn) {
+  closeMenuBtn.addEventListener('click', () => {
+    drawerMenu?.classList.remove('is-open')
+    menuOverlay?.classList.remove('is-visible')
+    document.body.style.overflow = '' // スクロール解除
+  })
+}
+
+// 背景の黒幕クリックで閉じる
+if (menuOverlay) {
+  menuOverlay.addEventListener('click', () => {
+    drawerMenu?.classList.remove('is-open')
+    menuOverlay?.classList.remove('is-visible')
+    document.body.style.overflow = '' // スクロール解除
+  })
+}

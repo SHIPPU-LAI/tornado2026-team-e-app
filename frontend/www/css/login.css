@@ -1,0 +1,244 @@
+/* ===================================================================
+   login.css — ログイン画面
+   style.css 側の共通トークン（--color-*, .btn, .field 等）を前提とする。
+=================================================================== */
+
+:root {
+    --lg-dark: #3d1c17;
+    --lg-shu: #c1440e;
+    --lg-bg: #faf3e4;
+    --lg-cream: #fff8ee;
+}
+
+.login-shell {
+    position: relative;
+    max-width: 480px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--lg-bg);
+    overflow-x: hidden;
+}
+
+.login-shell .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 17px;
+    background: var(--lg-dark);
+}
+
+.login-shell .top-bar .icon-btn {
+    background: none;
+    border: none;
+    color: var(--lg-cream);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.top-bar-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lg-cream);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 中の<span>もflexにして、アイコン画像とテキストを縦中央で揃える */
+.top-bar-home-link span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar-home-link img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.top-bar-home-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 見出し・現在の状態 ---------- */
+
+.lg-hero {
+    padding: 28px 22px 22px;
+    background: linear-gradient(160deg, var(--lg-dark) 0%, #6b2c22 100%);
+    color: var(--lg-cream);
+}
+
+.lg-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: var(--lg-cream);
+    margin: 0 0 10px;
+}
+
+.lg-hero p {
+    font-size: 0.98rem;
+    line-height: 1.8;
+    margin: 0;
+    color: rgba(255, 248, 238, 0.9);
+}
+
+.lg-session {
+    margin: 18px 22px 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: var(--color-kin-bg);
+    border: 1px solid var(--color-line);
+    font-size: 0.92rem;
+    color: var(--color-ink);
+}
+
+/* ---------- フォーム ---------- */
+
+.lg-section {
+    padding: 22px 22px 4px;
+}
+
+.lg-section+.lg-section {
+    border-top: 1px solid var(--color-line);
+    padding-top: 26px;
+}
+
+.lg-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--lg-dark);
+    margin: 0 0 6px;
+}
+
+.lg-section-note {
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.7;
+}
+
+.lg-field-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 14px 0 6px;
+}
+
+.lg-field-label:first-of-type {
+    margin-top: 4px;
+}
+
+.lg-input,
+.lg-select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--color-line);
+    background: var(--lg-cream);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-ink);
+}
+
+.lg-input:focus,
+.lg-select:focus {
+    outline: 3px solid rgba(193, 68, 14, 0.25);
+    outline-offset: 1px;
+    border-color: var(--lg-shu);
+}
+
+.lg-hint {
+    font-size: 0.8rem;
+    color: var(--color-ink-soft);
+    margin: 6px 0 0;
+}
+
+.lg-submit-btn {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+    border-radius: 999px;
+    font-size: 1.05rem;
+}
+
+.lg-status {
+    min-height: 1.4em;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.lg-status.is-error {
+    color: var(--lg-shu);
+    font-weight: 700;
+}
+
+.lg-status.is-ok {
+    color: #3d6b33;
+    font-weight: 700;
+}
+
+.lg-logout-btn {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 999px;
+}
+
+.lg-footer-note {
+    padding: 22px 22px 40px;
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+    line-height: 1.8;
+}
+
+.lg-footer-note a {
+    color: var(--lg-shu);
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しています（全ページで1本化）。
+   ======================================================== */
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   ============================================ */
+@media (min-width: 1024px) {
+    .login-shell {
+        max-width: none;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .lg-hero,
+    .lg-section,
+    .lg-footer-note {
+        padding-left: 56px;
+        padding-right: 56px;
+    }
+
+    .lg-session {
+        margin-left: 56px;
+        margin-right: 56px;
+    }
+
+    .lg-hero h1,
+    .lg-hero p,
+    .lg-section>*,
+    .lg-footer-note {
+        max-width: 480px;
+    }
+}

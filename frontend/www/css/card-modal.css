@@ -296,3 +296,39 @@
     opacity: 1;
   }
 }
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   PC画面が広くなった分、ポップアップも横幅を大きく取る。
+   画像エリアと本文エリアを左右に並べて、広い横幅を活かす。
+   ============================================ */
+@media (min-width: 1024px) {
+  .detail-modal {
+    max-width: 760px;
+    max-height: 86vh;
+  }
+
+  .detail-modal-scroll {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .detail-modal-visual {
+    flex: 0 0 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+  }
+
+  .detail-modal-body {
+    flex: 1 1 auto;
+    padding: 26px 32px 20px;
+  }
+
+  .detail-modal-image {
+    width: 180px;
+    height: 180px;
+    margin-top: 0;
+  }
+}
