@@ -2,6 +2,7 @@ node_modules/
 .dev.vars
 .wrangler/
 .env
+*.tmp.log
 
 # 他人が作成した資料は追跡しない（共有はSlack/Driveで行う）
 docs/*.docx
