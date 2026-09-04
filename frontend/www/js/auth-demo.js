@@ -53,6 +53,12 @@
     `;
     }
 
+
+    // 「プロフィール」の項目は、フロントの本番画面ができるまでドロワーには
+    // 出していない。バックエンド側に仮のページが GET /profile にある
+    // （features/auth/profile-ui.js）。復活させるときは<li>を戻し、
+    // hrefを本番画面に向ける（暫定で/profileに向けてもよい）。
+    // images/profileicon.pngは残してあるので削除しないこと。
     function loggedInNavHTML() {
         // 職人アカウントでログインしているときだけ「工芸品を登録する」を追加する
         const registerItemHTML = isArtisan()
