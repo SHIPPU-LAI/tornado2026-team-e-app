@@ -3,10 +3,10 @@
    バックエンド（検索チーム / features/search）の
      GET /api/search/facets   … 絞り込み候補（地方・都道府県・タグ）
      GET /api/search          … 段階式検索（q, block, prefecture, tag）
-   を使う。
+   を使う。フロントと同じ Worker に同居しているため、同一オリジン。
 =================================================================== */
 
-const API_BASE = 'https://noren.zzjjnn2005.workers.dev'
+const API_BASE = window.location.origin
 
 // 現在の絞り込み状態
 const state = {
@@ -109,6 +109,8 @@ async function runSearch() {
   if (state.block) url.searchParams.set('block', state.block)
   if (state.prefecture) url.searchParams.set('prefecture', state.prefecture)
   if (state.tag) url.searchParams.set('tag', state.tag)
+  const lang = window.getCraftsLang ? window.getCraftsLang() : 'ja'
+  if (lang !== 'ja') url.searchParams.set('lang', lang)
 
   try {
     const res = await fetch(url)
@@ -147,7 +149,7 @@ function renderResults() {
     btn.innerHTML = `
       <span class="search-result-thumb swipe-card-image--${paletteIndexFor(card.id)}"></span>
       <span class="search-result-body">
-        <span class="search-result-name">${card.name}</span>
+        <span class="search-result-name">${card.is_dummy ? '<span class="stat-badge">サンプル</span>' : ''}${card.name}</span>
         <span class="search-result-region">${region}</span>
         <span class="search-result-teaser">${makeTeaser(card.description)}</span>
         <span class="search-result-tags">${tagsHtml}</span>
@@ -164,7 +166,10 @@ const modalOverlay = document.getElementById('detail-modal-overlay')
 const modalHeartBtn = document.getElementById('modal-heart-btn')
 const modalCloseBtn = document.getElementById('modal-close-btn')
 
+let currentModalCard = null
+
 function openDetailModal(card) {
+  currentModalCard = card
   const description = card.description || 'この工芸品の詳しい説明は準備中です。'
   const tags = card.tags && card.tags.length > 0 ? card.tags : []
   const craftsmanName = card.artisan_name || '担当職人'
@@ -192,7 +197,9 @@ function openDetailModal(card) {
     .map((tag) => `<span class="tag">${tag}</span>`)
     .join('')
 
-  document.getElementById('modal-craftsman-name').textContent = craftsmanName
+  document.getElementById('modal-craftsman-name').innerHTML = card.is_dummy
+    ? `<span class="stat-badge">サンプル</span>${craftsmanName}`
+    : craftsmanName
   document.getElementById('modal-craftsman-workshop').textContent = craftsmanWorkshop
     ? `${craftsmanWorkshop}${card.region ? ` ／ ${card.region}` : ''}`
     : (card.region || '')
@@ -227,8 +234,27 @@ modalCloseBtn.addEventListener('click', closeDetailModal)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeDetailModal()
 })
-modalHeartBtn.addEventListener('click', () => {
-  modalHeartBtn.classList.toggle('liked')
+modalHeartBtn.addEventListener('click', async () => {
+  if (!currentModalCard) return
+  try {
+    const res = await fetch(new URL(`/api/introduce/user/${currentModalCard.id}/like`, API_BASE), {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (res.status === 401) {
+      const base = window.SITE_BASE || '../'
+      if (confirm('お気に入りに保存するにはログインが必要です。ログイン画面へ移動しますか？')) {
+        location.href = `${base}html/login.html`
+      }
+      return
+    }
+    if (!res.ok) throw new Error(`いいねに失敗しました (status: ${res.status})`)
+    const result = await res.json()
+    modalHeartBtn.classList.toggle('liked', result.liked)
+  } catch (err) {
+    console.error(err)
+    return
+  }
   modalHeartBtn.classList.remove('pop')
   void modalHeartBtn.offsetWidth
   modalHeartBtn.classList.add('pop')
