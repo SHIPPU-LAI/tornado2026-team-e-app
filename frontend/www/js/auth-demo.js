@@ -63,13 +63,13 @@
       </li>
       <li>
         <a href="#" class="drawer-nav-item">
-          <img src="${BASE}images/profile.svg" alt="">
+          <img src="${BASE}images/profileicon.png" alt="">
           <span>プロフィール</span>
         </a>
       </li>
       <li>
         <a href="#" class="drawer-nav-item" id="logoutBtnDemo">
-          <img src="${BASE}images/logout.svg" alt="">
+          <span class="drawer-nav-icon" aria-hidden="true">🚪</span>
           <span>ログアウト</span>
         </a>
       </li>
