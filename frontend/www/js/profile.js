@@ -41,6 +41,49 @@ function paletteIndexFor(id) {
     return (hash % 5) + 1
 }
 
+// ジャンルアイコン（genre.js:372-381 と同じ対応表。共有モジュールの
+// 仕組みがこのリポジトリに無いため各ファイルに複製している。
+// 仕組みができたら一本化すべき）。home.js と同じ考え方。
+const GENRE_ICON_MAP = {
+    陶磁器: 'genre-icon-toujiki.png',
+    漆器: 'genre-icon-shikki.png',
+    染物: 'genre-icon-someomo.png',
+    木工: 'genre-icon-mokko.png',
+    金工: 'genre-icon-kinkou.png',
+    ガラス: 'genre-icon-garasu.png',
+    和紙: 'genre-icon-washi.png',
+    竹工: 'genre-icon-take.png',
+    織物: 'genre-icon-nuno.png',
+    楽器: 'genre-icon-gakki.png',
+}
+
+function hasRealImage(card) {
+    return Boolean(card.image_url) || Boolean(card.images && card.images.length > 0)
+}
+
+function applyGenreIcon(containerEl, card) {
+    if (!containerEl || hasRealImage(card)) return
+    const tag = (card.tags || []).find((t) => GENRE_ICON_MAP[t])
+    if (!tag) return
+
+    containerEl.style.position = 'relative'
+    const icon = document.createElement('span')
+    icon.className = 'card-genre-icon'
+    icon.setAttribute('aria-hidden', 'true')
+    icon.style.position = 'absolute'
+    icon.style.inset = '0'
+    icon.style.margin = 'auto'
+    icon.style.width = '50%'
+    icon.style.height = '50%'
+    icon.style.backgroundImage = `url('${window.SITE_BASE || '../'}images/${GENRE_ICON_MAP[tag]}')`
+    icon.style.backgroundSize = 'contain'
+    icon.style.backgroundRepeat = 'no-repeat'
+    icon.style.backgroundPosition = 'center'
+    icon.style.opacity = '0.55'
+    icon.style.pointerEvents = 'none'
+    containerEl.appendChild(icon)
+}
+
 function renderCardGrid(listEl, items, emptyMessage) {
     listEl.innerHTML = ''
 
@@ -61,6 +104,7 @@ function renderCardGrid(listEl, items, emptyMessage) {
     `
         item.querySelector('.profile-card-name').textContent = card.name || '(名前未設定)'
         item.querySelector('.profile-card-sub').textContent = card.region || card.workshop_name || ''
+        applyGenreIcon(item.querySelector('.profile-card-photo'), card)
         listEl.appendChild(item)
     })
 }

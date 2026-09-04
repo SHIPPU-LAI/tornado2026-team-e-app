@@ -90,6 +90,55 @@ function resolveImageClassAndStyle(card) {
   return { className: ` swipe-card-image--${paletteIndex}`, style: '' }
 }
 
+// ジャンルアイコン（genre.js:372-381 と同じ対応表。共有モジュールの
+// 仕組みがこのリポジトリに無いため各ファイルに複製している。
+// 仕組みができたら一本化すべき）。
+// 実写画像が入るまでの間、グラデーションの上にタグに応じたシルエットの
+// アイコンを重ねて、未完成に見えるのを避ける。写真に見せないよう
+// contain・小さめサイズ・控えめなopacityにしている。CSSファイルは
+// 触らず、位置・大きさはすべてここでインラインstyleとして組み立てる。
+const GENRE_ICON_MAP = {
+  陶磁器: 'genre-icon-toujiki.png',
+  漆器: 'genre-icon-shikki.png',
+  染物: 'genre-icon-someomo.png',
+  木工: 'genre-icon-mokko.png',
+  金工: 'genre-icon-kinkou.png',
+  ガラス: 'genre-icon-garasu.png',
+  和紙: 'genre-icon-washi.png',
+  竹工: 'genre-icon-take.png',
+  織物: 'genre-icon-nuno.png',
+  楽器: 'genre-icon-gakki.png',
+}
+
+function hasRealImage(card) {
+  return Boolean(card.image_url) || Boolean(card.images && card.images.length > 0)
+}
+
+// containerEl（グラデーションが敷かれた要素）の上に、カードのタグに
+// 応じたジャンルアイコンを重ねる。実写画像があるカードや、対応表に
+// 一致するタグが無いカードでは何もしない（グラデーションのみのまま）。
+function applyGenreIcon(containerEl, card) {
+  if (!containerEl || hasRealImage(card)) return
+  const tag = (card.tags || []).find((t) => GENRE_ICON_MAP[t])
+  if (!tag) return
+
+  containerEl.style.position = 'relative'
+  const icon = document.createElement('span')
+  icon.setAttribute('aria-hidden', 'true')
+  icon.style.position = 'absolute'
+  icon.style.inset = '0'
+  icon.style.margin = 'auto'
+  icon.style.width = '50%'
+  icon.style.height = '50%'
+  icon.style.backgroundImage = `url('${window.SITE_BASE || '../'}images/${GENRE_ICON_MAP[tag]}')`
+  icon.style.backgroundSize = 'contain'
+  icon.style.backgroundRepeat = 'no-repeat'
+  icon.style.backgroundPosition = 'center'
+  icon.style.opacity = '0.55'
+  icon.style.pointerEvents = 'none'
+  containerEl.appendChild(icon)
+}
+
 // カード1枚分のDOM（タグ行＋カード本体）をまとめて生成する。
 // タグはこのカード専用で、次に表示されるカードは renderStack() のたびに
 // 別のカードとして新しく作られるタグを持つ（スワイプ後に古いタグが戻ることはない）。
@@ -119,6 +168,7 @@ function createCardElement(card) {
       </div>
     </div>
   `
+  applyGenreIcon(el.querySelector('.swipe-card-image'), card)
   return el
 }
 
