@@ -45,7 +45,7 @@ function modalPaletteIndexFor(id) {
 // 仕組みがこのリポジトリに無いため各ファイルに複製している。
 // 仕組みができたら一本化すべき）。home.js と同じ考え方。
 // home.html は home.js と card-modal.js を両方読み込む（同一グローバルスコープ）ため、
-// home.js 側の同名 const と衝突しないよう、このファイルだけ名前を変えている。
+// home.js 側の同名 const/function と衝突しないよう、このファイルだけ名前を変えている。
 const MODAL_GENRE_ICON_MAP = {
   陶磁器: 'genre-icon-toujiki.png',
   漆器: 'genre-icon-shikki.png',
@@ -59,17 +59,22 @@ const MODAL_GENRE_ICON_MAP = {
   楽器: 'genre-icon-gakki.png',
 }
 
-function hasRealImage(card) {
+// home.html が home.js と同時に読むため、グローバルスコープで衝突する
+// （function 宣言は const と違いSyntaxErrorにはならないが、後に読まれる
+// このファイルの定義で home.js 側が黙って上書きされてしまう）。
+function modalHasRealImage(card) {
   return Boolean(card.image_url) || Boolean(card.images && card.images.length > 0)
 }
 
 // containerElは開閉のたびに使い回すため、前回分のアイコンがあれば
 // 先に消してから、必要なら新しいアイコンを重ねる。
-function applyGenreIcon(containerEl, card) {
+// home.html が home.js と同時に読むため、グローバルスコープで衝突する
+// （理由は modalHasRealImage と同じ）。
+function applyModalGenreIcon(containerEl, card) {
   if (!containerEl) return
   const prev = containerEl.querySelector('.card-genre-icon')
   if (prev) prev.remove()
-  if (hasRealImage(card)) return
+  if (modalHasRealImage(card)) return
 
   const tag = (card.tags || []).find((t) => MODAL_GENRE_ICON_MAP[t])
   if (!tag) return
@@ -115,7 +120,7 @@ function openDetailModal(cardEl, card) {
   const paletteIndex = modalPaletteIndexFor(card.id)
   modalImageEl.style.backgroundImage = ''
   modalImageEl.className = `detail-modal-image detail-modal-image--${paletteIndex}`
-  applyGenreIcon(modalImageEl, card)
+  applyModalGenreIcon(modalImageEl, card)
 
   // 「いいね数」等の統計は無いので、実在する情報（地方／体験可否）をバッジにする
   const badges = []
