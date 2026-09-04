@@ -2,12 +2,12 @@
    profile.js — プロフィール画面
    /api/auth/me・/api/auth/logout は login.js と同じく直接呼び出し
    （credentials: "include"）。
-   /api/introduce/* はCORS対策の中継役（functions/api/proxy）を
-   経由する（register.jsと同じ考え方）。
+   /api/introduce/* も、frontend/www と同じ Worker から配信されているので
+   同一オリジン。中継役は不要で、直接叩ける（AGENTS.md / a4306c1 参照）。
 =================================================================== */
 
 const AUTH_API_BASE = 'https://noren.zzjjnn2005.workers.dev' // login.js と同じ
-const PROXY_BASE = location.origin // introduce系はプロキシ経由（register.jsと同じ）
+const PROXY_BASE = location.origin // introduce系も同一オリジンで直接叩く
 
 const STORAGE_KEY = 'craftsMatchingIsLoggedIn' // auth-demo.js / login.js と共有
 const ROLE_KEY = 'craftsMatchingRole' // 同上
@@ -85,7 +85,7 @@ async function loadArtisanSection() {
     const section = document.getElementById('artisan-section')
     section.style.display = ''
     try {
-        const data = await fetchJson('/api/proxy/introduce/artisan/mine')
+        const data = await fetchJson('/api/introduce/artisan/mine')
         const items = data.items || []
         document.getElementById('artisan-count').textContent = String(data.total ?? items.length)
         renderArtisanCards(items)
@@ -100,7 +100,7 @@ async function loadUserSection() {
     const section = document.getElementById('user-section')
     section.style.display = ''
     try {
-        const data = await fetchJson('/api/proxy/introduce/user/liked')
+        const data = await fetchJson('/api/introduce/user/liked')
         const items = data.items || []
         document.getElementById('user-count').textContent = String(data.total ?? items.length)
         renderUserCards(items)

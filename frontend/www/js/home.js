@@ -4,12 +4,12 @@
    ライブラリなしの Pointer Events + CSS変数で実装
 
    カードデータは検索チームのバックエンドAPIから取得する。
-   GET /api/proxy/search/cards?tag=... （tag省略で全件）
-   ※直接外部APIを叩くとCORSでブロックされるため、
-     自サイトの中継役（functions/api/proxy）を経由する。
+   GET /api/search/cards?tag=... （tag省略で全件）
+
+   frontend/www は同じ Worker から配信されているので API とは同一オリジン。
+   中継役は不要で、直接叩ける（AGENTS.md / a4306c1 参照）。
    ============================================ */
 
-// 中継役（Pages Functions）を経由するので、常に自分のオリジンでよい
 const API_BASE = location.origin
 
 // 画面に同時に見せる「重なり」の枚数
@@ -51,7 +51,7 @@ const skipOverlayEl = document.getElementById('skip-overlay')
 // tag を渡すと、そのタグを含むカードだけに絞り込まれる（サーバー側でフィルタ）。
 // 省略時は全件（＝「おまかせ」）。
 async function fetchCards(tag) {
-  const url = new URL('/api/proxy/search/cards', API_BASE)
+  const url = new URL('/api/search/cards', API_BASE)
   if (tag) url.searchParams.set('tag', tag)
 
   const res = await fetch(url)

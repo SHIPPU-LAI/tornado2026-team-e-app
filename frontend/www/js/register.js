@@ -1,8 +1,8 @@
 /* ===================================================================
    register.js — 工芸品の登録画面（職人アカウント用）
    バックエンド（features/introduce）の /api/introduce/artisan/* を使う。
-   直接叩くとCORSでブロックされるため、中継役
-   （functions/api/proxy/[[path]].js）を経由する。
+   frontend/www は同じ Worker から配信されているので API とは同一オリジン。
+   中継役は不要で、直接叩ける（AGENTS.md / a4306c1 参照）。
 =================================================================== */
 
 const API_BASE = location.origin
@@ -45,7 +45,7 @@ async function checkArtisanLogin() {
     const formEl = document.getElementById('reg-form')
 
     try {
-        await api('/api/proxy/introduce/artisan/mine')
+        await api('/api/introduce/artisan/mine')
         // 成功＝職人アカウントでログイン済み
         formEl.style.display = ''
         noticeEl.style.display = 'none'
@@ -92,7 +92,7 @@ function setupDraftSupport() {
         composeBtn.disabled = true
 
         try {
-            const data = await api('/api/proxy/introduce/artisan/compose', {
+            const data = await api('/api/introduce/artisan/compose', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ name, answers, followups: [] }),
@@ -152,7 +152,7 @@ function setupAddressSupport() {
         postalBtn.disabled = true
 
         try {
-            const data = await api(`/api/proxy/introduce/artisan/postal?code=${encodeURIComponent(code)}`)
+            const data = await api(`/api/introduce/artisan/postal?code=${encodeURIComponent(code)}`)
             // zipcloud準拠のレスポンス想定：{ results: [{ address1, address2, address3 }] }
             const result = data?.results?.[0]
             if (!result) {
@@ -183,7 +183,7 @@ function setupAddressSupport() {
         geocodeBtn.disabled = true
 
         try {
-            const data = await api(`/api/proxy/introduce/artisan/geocode?q=${encodeURIComponent(q)}`)
+            const data = await api(`/api/introduce/artisan/geocode?q=${encodeURIComponent(q)}`)
             const items = data?.items || []
 
             if (items.length === 0) {
@@ -321,7 +321,7 @@ function setupImageUpload() {
             try {
                 const formData = new FormData()
                 formData.append('file', file)
-                const res = await fetch(new URL('/api/proxy/introduce/artisan/upload-image', API_BASE), {
+                const res = await fetch(new URL('/api/introduce/artisan/upload-image', API_BASE), {
                     method: 'POST',
                     credentials: 'same-origin',
                     body: formData,
@@ -392,7 +392,7 @@ function setupFormSubmit(getTags, getImageKeys) {
         submitBtn.disabled = true
 
         try {
-            const data = await api('/api/proxy/introduce/artisan', {
+            const data = await api('/api/introduce/artisan', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(payload),
