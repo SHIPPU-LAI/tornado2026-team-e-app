@@ -367,7 +367,7 @@
     toujiki: { label: "陶磁器", icon: "genre-icon-toujiki.png" },
     shikki: { label: "漆器", icon: "genre-icon-shikki.png" },
     senshoku: { label: "染物", icon: "genre-icon-someomo.png" },
-    mokkou: { label: "木工" },
+    mokkou: { label: "木工", icon: "genre-icon-mokko.png" },
     kinkou: { label: "金工", icon: "genre-icon-kinkou.png" },
     garasu: { label: "ガラス", icon: "genre-icon-garasu.png" },
     washi: { label: "和紙", icon: "genre-icon-washi.png" },

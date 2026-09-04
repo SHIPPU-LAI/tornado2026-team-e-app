@@ -537,7 +537,8 @@ h2 {
   .search-shell,
   .login-shell,
   .reg-shell,
-  .profile-shell {
+  .profile-shell,
+  .faq-shell {
     flex: 1 1 auto;
     max-width: none;
     width: auto;

@@ -1,0 +1,244 @@
+/* ===================================================================
+   faq.css — よくある質問
+   login.css / newuser.css と同じ考え方で作っている。
+   style.css 側の共通トークン（--color-*, .btn 等）を前提とする。
+
+   質問の開閉は <details>/<summary> によるCSSだけの仕組みで、
+   JavaScriptを使っていない。
+=================================================================== */
+
+:root {
+  --faq-dark: #3d1c17;
+  --faq-shu: #c1440e;
+  --faq-bg: #faf3e4;
+  --faq-cream: #fff8ee;
+}
+
+.faq-shell {
+  position: relative;
+  max-width: 560px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--faq-bg);
+  overflow-x: hidden;
+}
+
+.faq-shell .top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 17px;
+  background: var(--faq-dark);
+}
+
+.faq-shell .top-bar .icon-btn {
+  background: none;
+  border: none;
+  color: var(--faq-cream);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.top-bar-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--faq-cream);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.top-bar-home-link span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-bar-home-link img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.top-bar-home-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 見出し ---------- */
+
+.faq-hero {
+  padding: 28px 22px 22px;
+  /* 半透明の濃い色を模様の上に重ねて少し暗くし、白文字の
+     読みやすさを確保する（login.css の .lg-hero と同じ考え方） */
+  background-image:
+    linear-gradient(160deg, rgba(61, 28, 23, 0.45) 0%, rgba(107, 44, 34, 0.45) 100%),
+    url("../images/faq-hero-pattern.png");
+  background-repeat: no-repeat, repeat;
+  background-size: cover, 110px 110px;
+  color: var(--faq-cream);
+}
+
+.faq-hero h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #fff;
+  margin: 0 0 8px;
+}
+
+.faq-hero p {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  margin: 0;
+  color: rgba(255, 248, 238, 0.9);
+}
+
+/* ---------- セクション ---------- */
+
+.faq-section {
+  padding: 22px 22px;
+  border-top: 1px solid var(--color-line);
+}
+
+.faq-section:first-of-type {
+  border-top: none;
+}
+
+.faq-section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--faq-dark);
+  margin: 0 0 14px;
+}
+
+/* ---------- Q&A（<details>/<summary>によるCSSだけの開閉） ---------- */
+
+.faq-item {
+  background: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.faq-item + .faq-item {
+  margin-top: 10px;
+}
+
+/* Chrome/Safari 標準の三角マーカーを消し、自前の＋アイコンに差し替える */
+.faq-question {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 46px 16px 18px;
+  position: relative;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--faq-dark);
+}
+
+.faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question::marker {
+  content: "";
+}
+
+.faq-question::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-kin-bg);
+  color: var(--faq-shu);
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+/* 開いているときは＋を回転させて×に見せる */
+.faq-item[open] .faq-question::after {
+  transform: translateY(-50%) rotate(135deg);
+}
+
+.faq-question:hover {
+  background: var(--color-kin-bg);
+}
+
+.faq-answer {
+  padding: 0 18px 18px;
+  border-top: 1px solid var(--color-line);
+}
+
+.faq-answer p {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--color-ink-soft);
+}
+
+/* 開閉時にふわっと高さが変化するアニメーション。
+   対応していないブラウザでは、単純にパッと開閉するだけになる
+   （動作が壊れることはない）。 */
+@supports (interpolate-size: allow-keywords) {
+  .faq-item {
+    interpolate-size: allow-keywords;
+  }
+
+  .faq-answer {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.25s ease;
+  }
+
+  .faq-item[open] .faq-answer {
+    height: auto;
+  }
+}
+
+/* ========================================================
+   🍔 ハンバーガーメニュー（左ドロワー）のスタイルは
+   style.css 側に共通化しています（全ページで1本化）。
+   ======================================================== */
+
+/* ============================================
+   ＋α：パソコンサイズ（幅1024px以上）
+   ============================================ */
+@media (min-width: 1024px) {
+  .faq-shell {
+    max-width: none;
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  .faq-hero,
+  .faq-section {
+    padding-left: 56px;
+    padding-right: 56px;
+  }
+
+  .faq-hero h1,
+  .faq-hero p,
+  .faq-section-title,
+  .faq-item {
+    max-width: 680px;
+  }
+}
