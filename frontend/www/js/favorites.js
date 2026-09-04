@@ -1,117 +1,48 @@
 /* ===================================================================
    favorites.js — お気に入り画面
    タグごとの横スクロール表示、タグの追加・編集、作品詳細ポップアップ
+
+   バックエンド（紹介チーム / features/introduce）の
+     GET  /api/introduce/user/liked        いいねした一覧（要ログイン）
+     POST /api/introduce/user/:id/like     いいねトグル（要ログイン）
+   を使う。フロントと同じ Worker に同居しているため、同一オリジン。
 =================================================================== */
 
 (() => {
     "use strict";
 
+    const API_BASE = window.location.origin;
+    const SITE_BASE = window.SITE_BASE || "../";
+
     /* -----------------------------------------------------------
-       0. データ（本来はAPI等から取得する想定のサンプル）
+       0. データ（GET /api/introduce/user/liked から取得する）
+
+       タグの並びは固定の分類ではなく、実際にいいねしたカードが
+       持っているタグから作る（ジャンル選択画面の固定タグとは
+       粒度が違うため。粒度合わせはフロント側の別課題）。
     ----------------------------------------------------------- */
 
-    // ジャンル選択画面と共通のタグ一覧
-    const TAG_LABELS = {
-        toujiki: "陶磁器",
-        shikki: "漆器",
-        senshoku: "染織",
-        mokkou: "木工",
-        kinkou: "金工",
-        garasu: "ガラス",
-        washi: "和紙",
-        take: "竹細工",
-        ningyou: "人形",
-        hamono: "刃物",
-        someomo: "染物",
-        nuno: "織物",
-    };
-
-    const FAVORITE_ITEMS = [
-        {
-            id: 1, tag: "garasu", name: "江戸切子 グラス", region: "東京都", imagePalette: 4,
-            description: "色を被せたガラスに刃を当てて模様を彫り出す切子細工です。光の入り方によって表情を変える文様が魅力です。",
-            tags: ["伝統工芸品指定", "光を纏うガラス細工"],
-            stats: { likes: 112, craftsmen: 2, duration: "約2週間" },
-            craftsmanName: "小林 硝子", craftsmanWorkshop: "小林切子工房"
-        },
-        {
-            id: 2, tag: "garasu", name: "琉球ガラス コップ", region: "沖縄県", imagePalette: 2,
-            description: "気泡や厚みのある独特の風合いが特徴のガラス工芸です。沖縄の光を受けて涼やかにきらめきます。",
-            tags: ["伝統工芸品指定", "気泡の風合い"],
-            stats: { likes: 88, craftsmen: 4, duration: "約1週間" },
-            craftsmanName: "上原 瑠璃", craftsmanWorkshop: "琉球ガラス工房 上原"
-        },
-        {
-            id: 3, tag: "garasu", name: "津軽びいどろ 花瓶", region: "青森県", imagePalette: 4,
-            description: "色とりどりのガラスを幾重にも重ねて模様を作る技法です。四季を映すような色合いが人気です。",
-            tags: ["伝統工芸品指定", "重ねガラス"],
-            stats: { likes: 76, craftsmen: 3, duration: "約10日" },
-            craftsmanName: "田中 硝子", craftsmanWorkshop: "北洋硝子"
-        },
-        {
-            id: 4, tag: "garasu", name: "江戸硝子 風鈴", region: "東京都", imagePalette: 2,
-            description: "宙吹きで一つ一つ手作りされる風鈴です。夏の涼を運ぶ、澄んだ音色が特徴です。",
-            tags: ["伝統工芸品指定", "宙吹き"],
-            stats: { likes: 64, craftsmen: 2, duration: "約3日" },
-            craftsmanName: "山本 涼", craftsmanWorkshop: "山本硝子店"
-        },
-        {
-            id: 5, tag: "garasu", name: "薩摩切子 タンブラー", region: "鹿児島県", imagePalette: 3,
-            description: "色ガラスと透明ガラスの層を活かし、ぼかしのようなグラデーションを生み出すのが特徴です。",
-            tags: ["伝統工芸品指定", "ぼかしの色合い"],
-            stats: { likes: 95, craftsmen: 3, duration: "約2週間" },
-            craftsmanName: "村田 薩摩", craftsmanWorkshop: "薩摩切子 村田工房"
-        },
-
-        {
-            id: 6, tag: "kinkou", name: "南部鉄器 鉄瓶", region: "岩手県", imagePalette: 1,
-            description: "砂と粘土を混ぜた鋳型に鉄を流し込んでかたちづくる伝統的な鋳物です。",
-            tags: ["伝統工芸品指定", "経年変化を楽しむ"],
-            stats: { likes: 128, craftsmen: 3, duration: "約3週間" },
-            craftsmanName: "佐藤 一輝", craftsmanWorkshop: "江刺鋳造工房"
-        },
-        {
-            id: 7, tag: "kinkou", name: "高岡銅器 花瓶", region: "富山県", imagePalette: 5,
-            description: "銅を主体とした鋳物の産地として知られ、繊細な彫金が施されるのが特徴です。",
-            tags: ["伝統工芸品指定", "彫金細工"],
-            stats: { likes: 70, craftsmen: 2, duration: "約1ヶ月" },
-            craftsmanName: "高岡 銅一", craftsmanWorkshop: "高岡銅器 工房"
-        },
-
-        {
-            id: 8, tag: "shikki", name: "輪島塗 汁椀", region: "石川県", imagePalette: 1,
-            description: "幾重にも漆を塗り重ね、研ぎ出す工程を繰り返す堅牢な漆器です。",
-            tags: ["伝統工芸品指定", "堅牢な塗り"],
-            stats: { likes: 101, craftsmen: 5, duration: "約半年" },
-            craftsmanName: "輪島 塗", craftsmanWorkshop: "輪島塗 工房"
-        },
-
-        {
-            id: 9, tag: "toujiki", name: "有田焼 染付皿", region: "佐賀県", imagePalette: 2,
-            description: "透き通るように白い磁肌に呉須で絵付けをした焼き物です。",
-            tags: ["伝統工芸品指定", "手描き絵付け"],
-            stats: { likes: 96, craftsmen: 5, duration: "約1ヶ月" },
-            craftsmanName: "中村 陶子", craftsmanWorkshop: "有田窯元 中村工房"
-        },
-        {
-            id: 10, tag: "toujiki", name: "美濃焼 ぐい呑み", region: "岐阜県", imagePalette: 3,
-            description: "多様な釉薬と焼き方が特徴で、日常使いにも馴染む器が多く作られています。",
-            tags: ["伝統工芸品指定", "多彩な釉薬"],
-            stats: { likes: 58, craftsmen: 6, duration: "約2週間" },
-            craftsmanName: "美濃 陶山", craftsmanWorkshop: "美濃焼 陶山窯"
-        },
-    ];
+    let likedCards = []; // 取得した「いいね」済みカード（そのままのカードオブジェクト）
+    let TAG_LABELS = {}; // 実際に付いているタグから作る { タグ文字列: タグ文字列 }
+    let activeTags = [];
+    let isLoggedIn = false;
 
     function itemsForTag(tagKey) {
-        return FAVORITE_ITEMS.filter((item) => item.tag === tagKey);
+        return likedCards.filter((item) => (item.tags || []).includes(tagKey));
+    }
+
+    function paletteIndexFor(id) {
+        const str = String(id);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+        }
+        return (hash % 5) + 1;
     }
 
     /* -----------------------------------------------------------
        1. 状態管理
     ----------------------------------------------------------- */
-
-    // 初期表示のタグ（添付イメージに合わせて「ガラス」のみ表示）
-    let activeTags = ["garasu"];
 
     const favMain = document.getElementById("fav-main");
     const addBtn = document.getElementById("fav-add-btn");
@@ -126,6 +57,21 @@
 
     function renderAllSections() {
         favMain.innerHTML = "";
+        addBtn.hidden = false;
+
+        if (!isLoggedIn) {
+            favMain.innerHTML =
+                '<p class="fav-empty">ログインすると、気になるに追加した工芸品がここに表示されます。' +
+                '<br><a href="' + SITE_BASE + 'html/login.html" style="color:inherit;text-decoration:underline">ログイン画面へ</a></p>';
+            addBtn.hidden = true;
+            return;
+        }
+
+        if (likedCards.length === 0) {
+            favMain.innerHTML = '<p class="fav-empty">まだ気になるに追加した工芸品がありません。</p>';
+            addBtn.hidden = true;
+            return;
+        }
 
         if (activeTags.length === 0) {
             const empty = document.createElement("p");
@@ -184,7 +130,7 @@
         btn.type = "button";
 
         btn.innerHTML = `
-      <span class="fav-item-image fav-item-image--${item.imagePalette}"></span>
+      <span class="fav-item-image fav-item-image--${paletteIndexFor(item.id)}"></span>
       <button class="fav-item-remove" type="button" aria-label="お気に入りから削除">✕</button>
     `;
 
@@ -194,19 +140,80 @@
             openDetailModal(item);
         });
 
-        // ✕ボタン → お気に入りから削除
+        // ✕ボタン → お気に入りから削除（実際にAPIでいいねを外す）
         const removeBtn = btn.querySelector(".fav-item-remove");
         removeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            const index = FAVORITE_ITEMS.findIndex((i) => i.id === item.id);
-            if (index !== -1) FAVORITE_ITEMS.splice(index, 1);
-            renderAllSections(); // 件数表示も含め再描画
+            unlikeCard(item.id);
         });
 
         return btn;
     }
 
-    renderAllSections();
+    /* -----------------------------------------------------------
+       API：いいね一覧の取得／解除
+    ----------------------------------------------------------- */
+
+    async function loadLiked() {
+        try {
+            const res = await fetch(new URL("/api/introduce/user/liked", API_BASE), {
+                credentials: "include",
+            });
+            if (res.status === 401) {
+                isLoggedIn = false;
+                likedCards = [];
+                renderAllSections();
+                return;
+            }
+            if (!res.ok) throw new Error(`いいね一覧の取得に失敗しました (status: ${res.status})`);
+            const data = await res.json();
+            isLoggedIn = true;
+            likedCards = Array.isArray(data.items) ? data.items : [];
+
+            // 実際に付いているタグからセクションを作る
+            TAG_LABELS = {};
+            likedCards.forEach((card) => {
+                (card.tags || []).forEach((t) => {
+                    TAG_LABELS[t] = t;
+                });
+            });
+            activeTags = Object.keys(TAG_LABELS);
+
+            renderAllSections();
+        } catch (err) {
+            console.error(err);
+            favMain.innerHTML = '<p class="fav-empty">お気に入りの読み込みに失敗しました。時間をおいて再度お試しください。</p>';
+            addBtn.hidden = true;
+        }
+    }
+
+    async function unlikeCard(id) {
+        try {
+            const res = await fetch(new URL(`/api/introduce/user/${id}/like`, API_BASE), {
+                method: "POST",
+                credentials: "include",
+            });
+            if (res.status === 401) {
+                alert("ログインが必要です。");
+                return;
+            }
+            if (!res.ok) throw new Error(`いいねの解除に失敗しました (status: ${res.status})`);
+            // このAPIはトグルなので、既にいいね済みのものを叩けば外れる想定
+            likedCards = likedCards.filter((c) => c.id !== id);
+            // タグの一覧も作り直す（外した結果、空になるセクションもあるため）
+            TAG_LABELS = {};
+            likedCards.forEach((card) => {
+                (card.tags || []).forEach((t) => {
+                    TAG_LABELS[t] = t;
+                });
+            });
+            activeTags = activeTags.filter((t) => TAG_LABELS[t]);
+            renderAllSections();
+        } catch (err) {
+            console.error(err);
+            alert("お気に入りの解除に失敗しました。時間をおいて再度お試しください。");
+        }
+    }
 
     /* -----------------------------------------------------------
        3. タグ追加シート
@@ -252,35 +259,49 @@
     });
 
     /* -----------------------------------------------------------
-       4. 作品詳細ポップアップ（card-modal.jsと同じ構造）
+       4. 作品詳細ポップアップ
     ----------------------------------------------------------- */
 
     const modalOverlay = document.getElementById("detail-modal-overlay");
     const modalCloseBtn = document.getElementById("modal-close-btn");
     const modalHeartBtn = document.getElementById("modal-heart-btn");
 
+    let currentModalCard = null;
+
     function openDetailModal(item) {
-        document.getElementById("modal-tag").textContent = TAG_LABELS[item.tag] || item.tag;
+        currentModalCard = item;
+
+        const tags = item.tags && item.tags.length > 0 ? item.tags : [];
+
+        document.getElementById("modal-tag").innerHTML = item.is_dummy
+            ? '<span class="stat-badge">サンプル</span>' + (tags[0] || "工芸")
+            : (tags[0] || "工芸");
         document.getElementById("modal-title").textContent = item.name;
-        document.getElementById("modal-region").textContent = item.region;
-        document.getElementById("modal-description").textContent = item.description;
+        document.getElementById("modal-region").textContent = item.region || item.block || "";
+        document.getElementById("modal-description").textContent =
+            item.description || "この工芸品の詳しい説明は準備中です。";
 
         const modalImageEl = document.getElementById("modal-image");
-        modalImageEl.className = `detail-modal-image fav-item-image--${item.imagePalette}`;
+        modalImageEl.style.backgroundImage = "";
+        modalImageEl.className = `detail-modal-image fav-item-image--${paletteIndexFor(item.id)}`;
 
-        document.getElementById("modal-stats").innerHTML = `
-      <span class="stat-badge"><strong>${item.stats.likes}</strong> 人が気になる</span>
-      <span class="stat-badge">職人 <strong>${item.stats.craftsmen}</strong> 名在籍</span>
-      <span class="stat-badge">制作期間 <strong>${item.stats.duration}</strong></span>
-    `;
+        const badges = [];
+        if (item.block) badges.push(`<span class="stat-badge">${item.block}地方</span>`);
+        if (tags.includes("体験できる")) badges.push('<span class="stat-badge">体験できる</span>');
+        if (tags.includes("見学できる")) badges.push('<span class="stat-badge">見学できる</span>');
+        if (tags.includes("実演")) badges.push('<span class="stat-badge">実演あり</span>');
+        document.getElementById("modal-stats").innerHTML = badges.join("");
 
-        document.getElementById("modal-tags").innerHTML = item.tags
+        document.getElementById("modal-tags").innerHTML = tags
             .map((tag) => `<span class="tag">${tag}</span>`)
             .join("");
 
-        document.getElementById("modal-craftsman-name").textContent = item.craftsmanName;
+        const craftsmanName = item.artisan_name || "担当職人";
+        document.getElementById("modal-craftsman-name").innerHTML = item.is_dummy
+            ? `<span class="stat-badge">サンプル</span>${craftsmanName}`
+            : craftsmanName;
         document.getElementById("modal-craftsman-workshop").textContent =
-            `${item.craftsmanWorkshop} ／ ${item.region}`;
+            (item.address || item.region || "") + (item.region ? ` ／ ${item.region}` : "");
 
         // お気に入り画面から開く詳細は、既にお気に入り登録済みのため常に「liked」状態
         modalHeartBtn.classList.add("liked");
@@ -306,10 +327,19 @@
         }
     });
 
-    // お気に入りハート（詳細ポップアップ内）：タップでお気に入り解除も可能に
+    // お気に入りハート：この画面に出ているものは常にいいね済みなので、
+    // タップすると解除する（トグルAPIを叩いて外し、一覧から消す）
     modalHeartBtn.addEventListener("click", () => {
-        modalHeartBtn.classList.toggle("liked");
+        if (!currentModalCard) return;
+        unlikeCard(currentModalCard.id);
+        closeDetailModal();
     });
+
+    /* -----------------------------------------------------------
+       初期化
+    ----------------------------------------------------------- */
+
+    loadLiked();
 })();
 
 // --- 2. ハンバーガーメニュー（ドロワー）の開閉設定 ---
@@ -344,4 +374,3 @@ if (menuOverlay) {
         document.body.style.overflow = '' // スクロール解除
     })
 }
-
