@@ -7,7 +7,7 @@ import { blockOf, coordsOf, prefecturesByBlock } from "./regions.js";
 import { cardToText } from "./embed.js";
 
 const CARD_COLS = `
-  id, artisan_id, name, name_kana, artisan_name, description,
+  id, artisan_id, name, name_kana, artisan_name, workshop_name, description,
   hp_url, region, address, history, tags, lang, created_at, updated_at
 `;
 
