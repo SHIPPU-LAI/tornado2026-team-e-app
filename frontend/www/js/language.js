@@ -280,6 +280,50 @@
     "楽器": "Instruments",
   };
 
+  // 検索画面「地方で絞り込む」チップ専用。#block-chip-row の中だけに適用する。
+  // 地方名はカードのタグとは衝突しないが、他の用途に混ざらないよう
+  // ジャンルと同じ考え方でスコープを絞っている。
+  const REGION_LABEL_DICT = {
+    "北海道": "Hokkaido",
+    "東北": "Tohoku",
+    "関東": "Kanto",
+    "中部": "Chubu",
+    "近畿": "Kinki",
+    "中国": "Chugoku",
+    "四国": "Shikoku",
+    "九州・沖縄": "Kyushu & Okinawa",
+  };
+
+  // 検索画面「都道府県で絞り込む」チップ専用。#prefecture-chip-row の
+  // 中だけに適用する（カード本体のregion表示はAPIデータなので触らない）。
+  // "-ken"等の接尾辞は付けず、一般的な英語表記のみ。
+  const PREFECTURE_LABEL_DICT = {
+    "北海道": "Hokkaido",
+    "青森県": "Aomori", "岩手県": "Iwate", "宮城県": "Miyagi",
+    "秋田県": "Akita", "山形県": "Yamagata", "福島県": "Fukushima",
+    "茨城県": "Ibaraki", "栃木県": "Tochigi", "群馬県": "Gunma", "埼玉県": "Saitama",
+    "千葉県": "Chiba", "東京都": "Tokyo", "神奈川県": "Kanagawa",
+    "新潟県": "Niigata", "富山県": "Toyama", "石川県": "Ishikawa", "福井県": "Fukui",
+    "山梨県": "Yamanashi", "長野県": "Nagano", "岐阜県": "Gifu", "静岡県": "Shizuoka",
+    "愛知県": "Aichi",
+    "三重県": "Mie", "滋賀県": "Shiga", "京都府": "Kyoto", "大阪府": "Osaka",
+    "兵庫県": "Hyogo", "奈良県": "Nara", "和歌山県": "Wakayama",
+    "鳥取県": "Tottori", "島根県": "Shimane", "岡山県": "Okayama",
+    "広島県": "Hiroshima", "山口県": "Yamaguchi",
+    "徳島県": "Tokushima", "香川県": "Kagawa", "愛媛県": "Ehime", "高知県": "Kochi",
+    "福岡県": "Fukuoka", "佐賀県": "Saga", "長崎県": "Nagasaki",
+    "熊本県": "Kumamoto", "大分県": "Oita", "宮崎県": "Miyazaki",
+    "鹿児島県": "Kagoshima", "沖縄県": "Okinawa",
+  };
+
+  // 特定のスコープ（CSSセレクタ）配下だけに適用する辞書の一覧。
+  // 全体辞書には入れられない、実データと文字列が衝突しうる語のための仕組み。
+  const SCOPED_DICTS = [
+    { selector: ".genre-btn-label", dict: GENRE_LABEL_DICT },
+    { selector: "#block-chip-row .search-chip", dict: REGION_LABEL_DICT },
+    { selector: "#prefecture-chip-row .search-chip", dict: PREFECTURE_LABEL_DICT },
+  ];
+
   // 属性で見るべきもの
   const TRANSLATABLE_ATTRS = ["placeholder", "aria-label", "title", "alt"];
 
@@ -334,12 +378,24 @@
     }
   }
 
-  function translateGenreLabels(root) {
-    root.querySelectorAll(".genre-btn-label").forEach((el) => {
-      const trimmed = el.textContent.trim();
-      if (Object.prototype.hasOwnProperty.call(GENRE_LABEL_DICT, trimmed)) {
-        el.textContent = GENRE_LABEL_DICT[trimmed];
-      }
+  // scoped辞書を、対象セレクタに一致する要素（rootが対象要素自身のときも
+  // 含める）だけに適用する。実データと文字列が衝突しうる語を、全体辞書
+  // ではなく特定の場所にだけ効かせるための仕組み（ジャンルボタン・
+  // 地方チップ・都道府県チップで使う）。
+  function translateScoped(root) {
+    if (!root.querySelectorAll) return;
+
+    SCOPED_DICTS.forEach(({ selector, dict }) => {
+      const targets = [];
+      if (root.matches && root.matches(selector)) targets.push(root);
+      root.querySelectorAll(selector).forEach((el) => targets.push(el));
+
+      targets.forEach((el) => {
+        const trimmed = el.textContent.trim();
+        if (Object.prototype.hasOwnProperty.call(dict, trimmed)) {
+          el.textContent = dict[trimmed];
+        }
+      });
     });
   }
 
@@ -359,8 +415,8 @@
       root.querySelectorAll("*").forEach(translateElementAttrs);
     }
 
-    // ジャンルボタン（専用辞書、body配下なら対象）
-    if (root.querySelectorAll) translateGenreLabels(root);
+    // scoped辞書（ジャンルボタン・地方チップ・都道府県チップ）
+    translateScoped(root);
   }
 
   function applyEnglishUI() {
