@@ -6,8 +6,6 @@
 //   POST /api/auth/logout
 //   GET  /api/auth/me        ← requireAuth
 //   GET  /dev/login          動作確認用の画面（成果物ではない）
-//   GET  /profile            プロフィール（仮）。人間の判断で例外的に占有。
-//                             profile-ui.js 参照。フロントの本番画面ができたら譲る
 //
 // この feature が書き込むテーブル: users, sessions
 
@@ -24,7 +22,6 @@ import {
   clearSessionCookie,
 } from "./session.js";
 import { renderPage } from "./ui.js";
-import { renderPage as renderProfilePage } from "./profile-ui.js";
 
 const app = new Hono();
 
@@ -157,10 +154,5 @@ app.get("/api/auth/me", (c) => c.json({ user: publicUser(c.get("user")) }));
 
 // 検証用の画面。成果物ではない。/login, /register はフロントエンド担当のために空けてある。
 app.get("/dev/login", (c) => c.html(renderPage()));
-
-// 仮のプロフィール画面。人間の判断で、フロントの本番画面ができるまでの間だけ
-// バックエンドが例外的に占有している（/login, /register は引き続き空けたまま）。
-// 認証はかけない。画面側がGET /api/auth/meを叩いて未ログインかどうかを判定する。
-app.get("/profile", (c) => c.html(renderProfilePage()));
 
 export default app;
