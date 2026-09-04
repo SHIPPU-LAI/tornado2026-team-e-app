@@ -278,9 +278,32 @@ function attachDragHandlers(el, card) {
   el.addEventListener('pointercancel', onPointerUp)
 }
 
+// 「気になる」を保存する（POST /api/introduce/user/:id/like はトグルAPI）。
+// 未ログインなら401が返るので、無言で失敗させずログインへ誘導する。
+async function likeCard(id) {
+  try {
+    const res = await fetch(new URL(`/api/introduce/user/${id}/like`, API_BASE), {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (res.status === 401) {
+      const base = window.SITE_BASE || '../'
+      if (confirm('「気になる」を保存するにはログインが必要です。ログイン画面へ移動しますか？')) {
+        location.href = `${base}html/login.html`
+      }
+      return
+    }
+    if (!res.ok) throw new Error(`いいねに失敗しました (status: ${res.status})`)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 // ボタン操作 or ドラッグ確定時、共通で呼ばれる「確定」処理
 function commitSwipe(el, card, action) {
   el.classList.add(action === 'like' ? 'fly-right' : 'fly-left')
+
+  if (action === 'like') likeCard(card.id)
 
   // アニメーション終了を待ってからカード（タグごと）を取り除き、次を繰り上げる。
   // 次のカードは renderStack() が新しく作る別要素なので、
@@ -288,9 +311,6 @@ function commitSwipe(el, card, action) {
   el.addEventListener(
     'transitionend',
     () => {
-      // ※このバックエンドには今のところ「スワイプ結果の保存」用のAPIが
-      //   無いため、ここではローカルの表示上だけデッキから外している。
-      //   保存用エンドポイントができたら、ここでfetch(POST)する。
       deck.shift()
       renderStack()
     },

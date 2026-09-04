@@ -164,7 +164,10 @@ const modalOverlay = document.getElementById('detail-modal-overlay')
 const modalHeartBtn = document.getElementById('modal-heart-btn')
 const modalCloseBtn = document.getElementById('modal-close-btn')
 
+let currentModalCard = null
+
 function openDetailModal(card) {
+  currentModalCard = card
   const description = card.description || 'この工芸品の詳しい説明は準備中です。'
   const tags = card.tags && card.tags.length > 0 ? card.tags : []
   const craftsmanName = card.artisan_name || '担当職人'
@@ -229,8 +232,27 @@ modalCloseBtn.addEventListener('click', closeDetailModal)
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeDetailModal()
 })
-modalHeartBtn.addEventListener('click', () => {
-  modalHeartBtn.classList.toggle('liked')
+modalHeartBtn.addEventListener('click', async () => {
+  if (!currentModalCard) return
+  try {
+    const res = await fetch(new URL(`/api/introduce/user/${currentModalCard.id}/like`, API_BASE), {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (res.status === 401) {
+      const base = window.SITE_BASE || '../'
+      if (confirm('お気に入りに保存するにはログインが必要です。ログイン画面へ移動しますか？')) {
+        location.href = `${base}html/login.html`
+      }
+      return
+    }
+    if (!res.ok) throw new Error(`いいねに失敗しました (status: ${res.status})`)
+    const result = await res.json()
+    modalHeartBtn.classList.toggle('liked', result.liked)
+  } catch (err) {
+    console.error(err)
+    return
+  }
   modalHeartBtn.classList.remove('pop')
   void modalHeartBtn.offsetWidth
   modalHeartBtn.classList.add('pop')

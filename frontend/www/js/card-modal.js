@@ -123,9 +123,31 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-// お気に入りボタン（弾むアニメーションはCSS側の .pop に任せる）
-modalHeartBtn.addEventListener('click', () => {
-  modalHeartBtn.classList.toggle('liked')
+// お気に入りボタン（弾むアニメーションはCSS側の .pop に任せる）。
+// POST /api/introduce/user/:id/like はトグルAPIなので、実際に叩いた結果
+// （result.liked）に合わせて見た目を合わせる。未ログインなら401なので
+// 無言で失敗させずログインへ誘導する。
+modalHeartBtn.addEventListener('click', async () => {
+  if (!currentModalCard) return
+  try {
+    const res = await fetch(new URL(`/api/introduce/user/${currentModalCard.id}/like`, API_BASE), {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (res.status === 401) {
+      const base = window.SITE_BASE || '../'
+      if (confirm('お気に入りに保存するにはログインが必要です。ログイン画面へ移動しますか？')) {
+        location.href = `${base}html/login.html`
+      }
+      return
+    }
+    if (!res.ok) throw new Error(`いいねに失敗しました (status: ${res.status})`)
+    const result = await res.json()
+    modalHeartBtn.classList.toggle('liked', result.liked)
+  } catch (err) {
+    console.error(err)
+    return
+  }
   modalHeartBtn.classList.remove('pop')
   void modalHeartBtn.offsetWidth // アニメーションを毎回再生させるためのリフロー
   modalHeartBtn.classList.add('pop')
